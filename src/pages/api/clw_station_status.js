@@ -2,9 +2,9 @@
 import sql from 'mssql';
 
 const config = {
-  user: 'admin',
-  password: 'admin',
-  server: 'DESKTOP-FKJATC0', // Make sure this is the correct server name
+  user: 'admin2',
+  password: 'reset@123',
+  server: 'REP-TRACE', // Make sure this is the correct server name
   database: 'replus_treceability',
   options: {
     encrypt: false, // Set to true if you're connecting to Azure SQL Database
