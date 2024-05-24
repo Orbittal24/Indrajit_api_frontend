@@ -19,7 +19,7 @@ export default async function handler(req, res) {
       await sql.connect(config);
       
       // Execute the query
-      const result = await sql.query('SELECT * FROM [dbo].[clw_station_status]');
+      const result = await sql.query('SELECT * FROM [replus_treceability].[dbo].[clw_station_status]');
       console.log("queryresult",result);
       // Return the results
       res.status(200).json(result.recordset);
