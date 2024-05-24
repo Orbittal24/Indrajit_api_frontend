@@ -1,0 +1,54 @@
+.container-custom {
+    border-radius: 0.375rem;
+    border: 1px solid var(--stroke-color);
+    background-color: var(--white-color);
+    padding: 1.25rem 2rem 0.625rem 2rem;
+    box-shadow: var(--shadow-default);
+  }
+  
+  .input-group-custom {
+    margin-bottom: 1rem;
+  }
+  
+  .input-group-custom .form-control {
+    margin-right: 0.5rem;
+  }
+  
+  .input-group-custom .btn-primary {
+    margin-left: 0.5rem;
+  }
+  
+  .table-custom {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+  
+  .table-custom thead th {
+    background-color: var(--gray-2);
+    color: var(--text-black);
+  }
+  
+  .table-custom tbody td {
+    border-bottom: 1px solid #eee;
+  }
+  
+  .table-custom tbody tr:nth-child(even) {
+    background-color: var(--gray-1);
+  }
+  
+  .status-ok {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+  }
+  
+  .status-notok {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+  }
+  
+  .status-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+  }
+  
