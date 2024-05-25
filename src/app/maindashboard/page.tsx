@@ -20,6 +20,22 @@ const ECommerce: React.FC = () => {
   const [weldingSeries, setWeldingSeries] = useState<number[]>([0, 0]);
   const [fpcbSeries, setFpcbSeries] = useState<number[]>([0, 0]);
   const [moduleCount, setModuleCount] = useState<number>(0);
+  const [currentShift, setCurrentShift] = useState<string>("");
+
+
+  const determineShift = () => {
+    const currentTime = new Date();
+    const currentHour = currentTime.getHours();
+    const currentMinute = currentTime.getMinutes();
+
+    if (currentHour >= 6 && (currentHour < 14 || (currentHour === 14 && currentMinute === 0))) {
+      return "A";
+    } else {
+      return "B";
+    }
+  };
+
+  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,6 +62,7 @@ const ECommerce: React.FC = () => {
     };
 
     fetchData();
+    setCurrentShift(determineShift());
   }, []);
 
   if (isLoading) {
@@ -64,7 +81,7 @@ const ECommerce: React.FC = () => {
       <DropdownButton href="/tables">DATA</DropdownButton>
       <Card className="p-5">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3 2xl:gap-7.5">
-          <CardDataStats total="Shift  : A">
+        <CardDataStats total={`Shift  : ${currentShift}`}>
             <svg
               className="fill-success dark:fill-white"
               width="22"
@@ -106,7 +123,7 @@ const ECommerce: React.FC = () => {
               />
             </svg>
           </CardDataStats>
-          <CardDataStats total="Actual Time : 20min" subtitle=" Default Time : 25min">
+          <CardDataStats total="ERROR CODE : 0" >
             <svg
               className="fill-warning dark:fill-white"
               width="22"
