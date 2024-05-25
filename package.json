@@ -1,12 +1,17 @@
- {
+{
   "name": "free-nextjs-admin-dashboard",
   "version": "1.3.1",
   "private": true,
   "scripts": {
-    "dev": "next dev ",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "script1": "node tcplistner.js",
+    "script2": "node barcodescanner.js",
+    "dev-with-scripts": "npm run dev && npm run script1 && npm run script2",
+    "build-with-scripts": "npm run build && npm run script1 && npm run script2",
+    "start-with-scripts": "npm run start && npm run script1 && npm run script2"
   },
   "dependencies": {
     "apexcharts": "^3.45.2",
@@ -15,12 +20,14 @@
     "flatpickr": "^4.6.13",
     "jsvectormap": "^1.5.3",
     "mssql": "^10.0.2",
+    "net": "^1.0.2",
     "next": "14.1.0",
     "react": "^18",
     "react-apexcharts": "^1.4.1",
     "react-dom": "^18",
     "reactstrap": "^9.2.2",
-    "websocket": "^1.0.35"
+    "websocket": "^1.0.35",
+    "ws": "^8.17.0"
   },
   "devDependencies": {
     "@types/node": "^20",
