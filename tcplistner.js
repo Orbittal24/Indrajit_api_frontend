@@ -44,8 +44,8 @@ const server = net.createServer((socket) => {
   console.log("Client connected");
 
   socket.on("data", async (data) => {
-    console.log("dataaaa",data);
-    //console.log("Received:", data.toString());
+    // console.log("dataaaa",data);
+    console.log("Received:", data.toString());
     var str = data.toString();
     var checker = str.split(/-(.+)/);
     if (checker[0] == "mcode") {
