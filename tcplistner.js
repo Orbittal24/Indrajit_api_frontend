@@ -4,9 +4,9 @@ const net = require("net");
 const sql = require("mssql");
 
 const mainDBConfig = {
-  user: "admin",
-  password: "admin",
-  server: "DESKTOP-FKJATC0",
+  user: "admin2",
+  password: "reset@123",
+  server: "REP-TRACE",
   database: "replus_treceability",
   options: {
     encrypt: false,
