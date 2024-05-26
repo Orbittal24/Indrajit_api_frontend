@@ -105,7 +105,7 @@ const server = net.createServer((socket) => {
   });
 });
 
-const PORT = 4000;
+const PORT = 7080;
 
 server.listen(PORT, () => {
 var scannedBarcode = "";
