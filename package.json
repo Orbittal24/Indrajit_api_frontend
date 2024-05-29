@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "script1": "node tcplistner.js",
-    "script2": "node barcodescanner.js",
+    "script2": "node replusbarcodescanner.js",
     "dev-with-scripts": "npm run dev && npm run script1 && npm run script2",
     "build-with-scripts": "npm run build && npm run script1 && npm run script2",
     "start-with-scripts": "npm run start && npm run script1 && npm run script2"
