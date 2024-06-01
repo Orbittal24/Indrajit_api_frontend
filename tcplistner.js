@@ -310,7 +310,7 @@ const sql = require("mssql");
 //   console.log("Connected to", mainDBConfig2);
 
 ////////end_date//////
-  function getFormattedDateTime() {
+ function getFormattedDateTime() {
     const curdate = new Date();
     const yr = curdate.getFullYear();
     const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
@@ -468,19 +468,46 @@ async function processVision1(data, scannedBarcode) {
       console.log("Global Formatted DateTime:::", globalFormattedDateTime);
     
 
-    const queryString = `SELECT * FROM [replus_treceability].[dbo].[cell_sorting ] WHERE module_barcode = '${scannedBarcode}'`;
+    // const queryString = `SELECT * FROM [replus_treceability].[dbo].[cell_sorting ] WHERE module_barcode = '${scannedBarcode}'`;
 
-    const secondResult = await mainPool.request().query(queryString);
-    console.log("query111111111111111111111111111111111:", queryString);
-    console.log("yyyyyyyyyyyyyyyy:",secondResult.recordset.length);
-    if (secondResult.recordset.length > 0) {
-      await mainPool
-        .request()
-        .query(
-          `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, battery_pack_name, v1_status, v1_error,v1_start_date) VALUES ('${scannedBarcode}', '${secondResult.recordset[0].battery_pack_name}', '${statusToStore}', '${v1error}','${globalFormattedDateTime}')`,
-        );
-      console.log("Data inserteduuuuuuuuuuuuuuuuuuuuuuu");
-    }
+    // const secondResult = await mainPool.request().query(queryString);
+    // console.log("query111111111111111111111111111111111:", queryString);
+    // console.log("yyyyyyyyyyyyyyyy:",secondResult.recordset.length);
+    // if (secondResult.recordset.length > 0) {
+    //   await mainPool
+    //     .request()
+    //     .query(
+    //       `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, battery_pack_name, v1_status, v1_error,v1_start_date) VALUES ('${scannedBarcode}', '${secondResult.recordset[0].battery_pack_name}', '${statusToStore}', '${v1error}','${globalFormattedDateTime}')`,
+    //     );
+    //   console.log("Data inserteduuuuuuuuuuuuuuuuuuuuuuu");
+    // }
+
+
+
+    const queryString = `SELECT * FROM [replus_treceability].[dbo].[cell_sorting] WHERE module_barcode = '${scannedBarcode}'`;
+
+const secondResult = await mainPool.request().query(queryString);
+console.log("query111111111111111111111111111111111:", queryString);
+console.log("yyyyyyyyyyyyyyyy:", secondResult.recordset.length);
+
+if (secondResult.recordset.length > 0) {
+  const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${scannedBarcode}'`;
+  const selectResult = await mainPool.request().query(selectQuery);
+  
+  if (selectResult.recordset.length > 0) {
+    // Update the existing record
+    await mainPool
+      .request()
+      .query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET battery_pack_name = '${secondResult.recordset[0].battery_pack_name}', v1_status = '${statusToStore}', v1_error = '${v1error}' WHERE module_barcode = '${scannedBarcode}'`);
+    console.log("Data updated successfullyyyyyyyyyyyyyyyyyyyyy");
+  } else {
+    // Insert a new record
+    await mainPool
+      .request()
+      .query(`INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, battery_pack_name, v1_status, v1_error, v1_start_date) VALUES ('${scannedBarcode}', '${secondResult.recordset[0].battery_pack_name}', '${statusToStore}', '${v1error}', '${globalFormattedDateTime}')`);
+    console.log("Data inserted successfullyyyyyyyyyyyyyyyyyyyyy");
+  }
+}
   }
 }
   
@@ -596,6 +623,7 @@ async function fpcb(data) {
     }
   }
 }
+
 
 
 
