@@ -208,7 +208,7 @@ async function processVision1(data, scannedBarcode) {
     if (statusToStore) {
       const v1error = data.vision1.ERRORStatus;
 
-      const queryString = `SELECT * FROM [replus_treceability].[dbo].[cell_sorting] WHERE module_barcode = '${moduleBarcode}'`;
+      const queryString = `SELECT *  FROM [REPLUSBATTDB_V0100].[dbo].[june_2024] WHERE ModuleCode = '${moduleBarcode}'`;
 
       const mainPoolConnectResult2 = await mainPoolConnect2;
       const secondResult = await mainPoolConnectResult2
@@ -218,7 +218,7 @@ async function processVision1(data, scannedBarcode) {
       console.log("yyyyyyyyyyyyyyyy:", secondResult.recordset.length);
 
       if (secondResult.recordset.length > 0) {
-        const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status1] WHERE module_barcode = '${moduleBarcode}'`;
+        const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${moduleBarcode}'`;
         const selectResult = await mainPoolConnectResult
           .request()
           .query(selectQuery);
@@ -228,7 +228,7 @@ async function processVision1(data, scannedBarcode) {
           await mainPoolConnectResult
             .request()
             .query(
-              `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET battery_pack_name = '${secondResult.recordset[0].battery_pack_name}', v1_status = '${statusToStore}', v1_error = '${v1error}' WHERE module_barcode = '${moduleBarcode}'`,
+              `UPDATE [replus_treceability].[dbo].[clw_station_status] SET battery_pack_name = '${secondResult.recordset[0].battery_pack_name}', v1_status = '${statusToStore}', v1_error = '${v1error}' WHERE module_barcode = '${moduleBarcode}'`,
             );
           console.log("Data updated successfullyyyyyyyyyyyyyyyyyyyyy");
           continueChecking = false; // Stop checking after successful update
@@ -237,19 +237,19 @@ async function processVision1(data, scannedBarcode) {
           await mainPoolConnectResult
             .request()
             .query(
-              `INSERT INTO [replus_treceability].[dbo].[clw_station_status1] (module_barcode, battery_pack_name, v1_status, v1_error, v1_start_date) VALUES ('${moduleBarcode}', '${secondResult.recordset[0].battery_pack_name}', '${statusToStore}', '${v1error}', '${globalFormattedDateTime}')`,
+              `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, battery_pack_name, v1_status, v1_error, v1_start_date) VALUES ('${moduleBarcode}', '${secondResult.recordset[0].battery_pack_name}', '${statusToStore}', '${v1error}', '${globalFormattedDateTime}')`,
             );
           console.log("Data inserted successfullyyyyyyyyyyyyyyyyyyyyy");
 
           const combinedResult1 = await mainPool.request().query(`
                 WITH LatestRow AS (
                     SELECT TOP 1 sr_no
-                    FROM [dbo].[clw_station_status1]
+                    FROM [dbo].[clw_station_status]
                     WHERE module_barcode = '${moduleBarcode}'
                     ORDER BY sr_no DESC
                 )
                 SELECT TOP 1 v1_end_date
-                FROM [dbo].[clw_station_status1]
+                FROM [dbo].[clw_station_status]
                 WHERE  sr_no < (SELECT sr_no FROM LatestRow)
                 ORDER BY sr_no DESC;
             `);
@@ -269,7 +269,7 @@ async function processVision1(data, scannedBarcode) {
               await mainPool
                 .request()
                 .query(
-                  `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET  v1_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${moduleBarcode}'`,
+                  `UPDATE [replus_treceability].[dbo].[clw_station_status] SET  v1_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${moduleBarcode}'`,
                 );
             } else {
               console.log(
@@ -372,20 +372,20 @@ async function processVision2(data) {
           barcodeResult.recordset[0];
         const globalFormattedDateTime = formatDateTime(start_date);
 
-        // Update the clw_station_status1 table
-        const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status1] WHERE module_barcode = '${module_barcode}'`;
+        // Update the clw_station_status table
+        const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${module_barcode}'`;
         const selectResult = await mainPool.request().query(selectQuery);
 
         if (selectResult.recordset.length > 0) {
           await mainPool
             .request()
             .query(
-              `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET v2_status = '${v2_status}', v2_error = '${v2_error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
+              `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${v2_status}', v2_error = '${v2_error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
             );
-          console.log("Data updated successfully in clw_station_status1");
+          console.log("Data updated successfully in clw_station_status");
           console.log(
             "v2query:::",
-            `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET v2_status = '${v2_status}', v2_error = '${v2_error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
+            `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${v2_status}', v2_error = '${v2_error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
           );
           previousStatus = v2_status; // Update previousStatus to the current status
           continueChecking = false;
@@ -394,12 +394,12 @@ async function processVision2(data) {
           const combinedResult2 = await mainPool.request().query(`
                 WITH LatestRow AS (
                     SELECT TOP 1 sr_no
-                    FROM [dbo].[clw_station_status1]
+                    FROM [dbo].[clw_station_status]
                     WHERE module_barcode = '${module_barcode}'
                     ORDER BY sr_no DESC
                 )
                 SELECT TOP 1 v2_end_date
-                FROM [dbo].[clw_station_status1]
+                FROM [dbo].[clw_station_status]
                 WHERE 
               sr_no < (SELECT sr_no FROM LatestRow)
                 ORDER BY sr_no DESC;
@@ -420,7 +420,7 @@ async function processVision2(data) {
               await mainPool
                 .request()
                 .query(
-                  `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET  v2_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${module_barcode}'`,
+                  `UPDATE [replus_treceability].[dbo].[clw_station_status] SET  v2_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${module_barcode}'`,
                 );
             } else {
               console.log(
@@ -434,7 +434,7 @@ async function processVision2(data) {
           }
         } else {
           console.log(
-            `No record found in clw_station_status1 for module_barcode: ${module_barcode}`,
+            `No record found in clw_station_status for module_barcode: ${module_barcode}`,
           );
           continueChecking = false; // Stop checking if no record to update
         }
@@ -527,20 +527,20 @@ async function welding(data) {
           barcodeResult.recordset[0];
         const globalFormattedDateTime = formatDateTime(start_date);
 
-        // Update the clw_station_status1 table
-        const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status1] WHERE module_barcode = '${module_barcode}'`;
+        // Update the clw_station_status table
+        const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${module_barcode}'`;
         const selectResult = await mainPool.request().query(selectQuery);
 
         if (selectResult.recordset.length > 0) {
           await mainPool
             .request()
             .query(
-              `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET welding_status = '${welding_status}', welding_error = '${welding_error}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
+              `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${welding_status}', welding_error = '${welding_error}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
             );
-          console.log("Data updated successfully in clw_station_status1");
+          console.log("Data updated successfully in clw_station_status");
           console.log(
             "weldingqueryyy:::",
-            `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET welding_status = '${welding_status}', welding_error = '${welding_error}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
+            `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${welding_status}', welding_error = '${welding_error}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
           );
           previousWeldingStatus = welding_status; // Update previousWeldingStatus to the current status
           continueChecking = false; // Stop checking after successful update
@@ -548,12 +548,12 @@ async function welding(data) {
           const combinedResult3 = await mainPool.request().query(`
             WITH LatestRow AS (
                 SELECT TOP 1 sr_no
-                FROM [dbo].[clw_station_status1]
+                FROM [dbo].[clw_station_status]
                 WHERE module_barcode = '${module_barcode}'
                 ORDER BY sr_no DESC
             )
             SELECT TOP 1 welding_end_date
-            FROM [dbo].[clw_station_status1]
+            FROM [dbo].[clw_station_status]
             WHERE 
           sr_no < (SELECT sr_no FROM LatestRow)
             ORDER BY sr_no DESC;
@@ -577,7 +577,7 @@ async function welding(data) {
               await mainPool
                 .request()
                 .query(
-                  `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET  welding_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${module_barcode}'`,
+                  `UPDATE [replus_treceability].[dbo].[clw_station_status] SET  welding_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${module_barcode}'`,
                 );
             } else {
               console.log(
@@ -591,7 +591,7 @@ async function welding(data) {
           }
         } else {
           console.log(
-            `No record found in clw_station_status1 for module_barcode: ${module_barcode}`,
+            `No record found in clw_station_status for module_barcode: ${module_barcode}`,
           );
           continueChecking = false; // Stop checking if no record to update
         }
@@ -684,8 +684,8 @@ async function fpcb(data) {
           barcodeResult.recordset[0];
         const globalFormattedDateTime = formatDateTime(start_date);
 
-        // Update the clw_station_status1 table
-        const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status1] WHERE module_barcode = '${module_barcode}'`;
+        // Update the clw_station_status table
+        const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${module_barcode}'`;
         const selectResult = await mainPool.request().query(selectQuery);
 
         if (selectResult.recordset.length > 0) {
@@ -693,12 +693,12 @@ async function fpcb(data) {
           await mainPool
             .request()
             .query(
-              `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET fpcb_status = '${fpcb_status}', fpcb_error = '${fpcb_error}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
+              `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${fpcb_status}', fpcb_error = '${fpcb_error}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
             );
-          console.log("Data updated successfully in clw_station_status1");
+          console.log("Data updated successfully in clw_station_status");
           console.log(
             "fpcbqueryyy:::",
-            `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET fpcb_status = '${fpcb_status}', fpcb_error = '${fpcb_error}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
+            `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${fpcb_status}', fpcb_error = '${fpcb_error}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`,
           );
           previousFPCBStatus = fpcb_status; // Update previousFPCBStatus to the current status
           continueChecking = false; // Stop checking after successful update
@@ -706,12 +706,12 @@ async function fpcb(data) {
           const combinedResult4 = await mainPool.request().query(`
             WITH LatestRow AS (
                 SELECT TOP 1 sr_no
-                FROM [dbo].[clw_station_status1]
+                FROM [dbo].[clw_station_status]
                 WHERE module_barcode = '${module_barcode}'
                 ORDER BY sr_no DESC
             )
             SELECT TOP 1 fpcb_end_date
-            FROM [dbo].[clw_station_status1]
+            FROM [dbo].[clw_station_status]
             WHERE 
           sr_no < (SELECT sr_no FROM LatestRow)
             ORDER BY sr_no DESC;
@@ -732,7 +732,7 @@ async function fpcb(data) {
               await mainPool
                 .request()
                 .query(
-                  `UPDATE [replus_treceability].[dbo].[clw_station_status1] SET  fpcb_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${module_barcode}'`,
+                  `UPDATE [replus_treceability].[dbo].[clw_station_status] SET  fpcb_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${module_barcode}'`,
                 );
             } else {
               console.log(
@@ -746,7 +746,7 @@ async function fpcb(data) {
           }
         } else {
           console.log(
-            `No record found in clw_station_status1 for module_barcode: ${module_barcode}`,
+            `No record found in clw_station_status for module_barcode: ${module_barcode}`,
           );
           continueChecking = false; // Stop checking if no record to update
         }
