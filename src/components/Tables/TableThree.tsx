@@ -14,6 +14,11 @@ const TableThree = () => {
   const [endDate, setEndDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+
+  const [errorData,seterrorData] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -34,6 +39,9 @@ const TableThree = () => {
 
     fetchData();
   }, []);
+
+
+  console.log("packgedata" ,packageData);
 
   const filterData = () => {
     let filtered = packageData;
@@ -91,12 +99,51 @@ const TableThree = () => {
     setCurrentPage(1); // Reset current page to 1
   };
 
+  const handleButtonClick = async (item, stationName) => {
+    const errorCode = item;
+
+    console.log("error code",errorCode);
+    
+      try {
+        const response = await fetch('/api/errordiscription', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            errorCode,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to send error code');
+        }
+        const responseData = await response.json(); // Extract response data
+        console.log('Response data:', responseData); // Log or handle the response data as needed
+        seterrorData(responseData);
+      } catch (error) {
+        console.error('Error:', error);
+        // Handle error
+      }
+  
+    setModalContent({ errorCode, stationName });
+    setShowModal(true);
+  };
+  
+  
+
+  const closeModal = () => {
+    setShowModal(false);
+    setModalContent(null);
+  };
+
   const displayedData = filteredData.slice(
     (currentPage - 1) * entriesToShow,
     currentPage * entriesToShow
   );
 
   console.log("Displayed data:", displayedData); // Log the displayed data
+
+  console.log("errorData",errorData);
 
   if (loading) {
     return <p>Loading...</p>;
@@ -175,7 +222,6 @@ const TableThree = () => {
             </div>
           </div>
 
-
           <table className="w-full table-auto">
             <thead>
               <tr className="bg-gray-2 text-left dark:bg-meta-4">
@@ -205,7 +251,7 @@ const TableThree = () => {
             <tbody>
               {displayedData.map((packageItem, key) => (
                 <tr key={key}>
-                  <td className="border-b border-[#eee] px-4 py-5 pl-9 dark:border-strokedark xl:pl-11">
+                  <td className="border-b border-[#eee] px-4 py-5 dark:border-strokedark xl:pl-11">
                     <h5 className="font-medium text-black dark:text-white">
                       {key + 1 + (currentPage - 1) * entriesToShow}
                     </h5>
@@ -217,7 +263,7 @@ const TableThree = () => {
                     <p className="text-black dark:text-white">{packageItem.module_barcode}</p>
                   </td>
                   <td className="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
-                    <p
+                    <button
                       className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium ${
                         packageItem.v1_status === 'OK'
                           ? 'bg-success text-success'
@@ -225,12 +271,13 @@ const TableThree = () => {
                           ? 'bg-danger text-danger'
                           : 'bg-warning text-warning'
                       }`}
+                      onClick={() => packageItem.v1_status === 'NOT OK' && handleButtonClick(packageItem.v1_error,  'Vision 1')}
                     >
                       {packageItem.v1_status || '-'}
-                    </p>
+                    </button>
                   </td>
                   <td className="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
-                    <p
+                    <button
                       className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium ${
                         packageItem.v2_status === 'OK'
                           ? 'bg-success text-success'
@@ -238,12 +285,13 @@ const TableThree = () => {
                           ? 'bg-danger text-danger'
                           : 'bg-warning text-warning'
                       }`}
+                      onClick={() => packageItem.v2_status === 'NOT OK' && handleButtonClick(packageItem.v2_error, 'Vision 2')}
                     >
                       {packageItem.v2_status || '-'}
-                    </p>
+                    </button>
                   </td>
                   <td className="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
-                    <p
+                    <button
                       className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium ${
                         packageItem.welding_status === 'OK'
                           ? 'bg-success text-success'
@@ -251,12 +299,13 @@ const TableThree = () => {
                           ? 'bg-danger text-danger'
                           : 'bg-warning text-warning'
                       }`}
+                      onClick={() => packageItem.welding_status === 'NOT OK' && handleButtonClick(packageItem.welding_error, 'Welding')}
                     >
                       {packageItem.welding_status || '-'}
-                    </p>
+                    </button>
                   </td>
                   <td className="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
-                    <p
+                    <button
                       className={`inline-flex rounded-full bg-opacity-10 px-3 py-1 text-sm font-medium ${
                         packageItem.fpcb_status === 'OK'
                           ? 'bg-success text-success'
@@ -264,9 +313,11 @@ const TableThree = () => {
                           ? 'bg-danger text-danger'
                           : 'bg-warning text-warning'
                       }`}
+                      onClick={() => packageItem.fpcb_status === 'NOT OK' && handleButtonClick(packageItem.fpcb_error, 'FPCB Welding')}
                     >
+                      
                       {packageItem.fpcb_status || '-'}
-                    </p>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -274,6 +325,23 @@ const TableThree = () => {
           </table>
         </div>
       </div>
+
+      {showModal && (
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+    <div className="bg-white p-6 rounded shadow-lg w-96 h-128">
+      <h2 className="text-xl font-bold mb-4">{modalContent.stationName}</h2>
+      {errorData.map((error, index) => (
+        <div key={index}>
+          <p><strong>Error Code:</strong> {error.error_code}</p>
+          <p><strong>Error Description:</strong> {error.error_discription}</p>
+        </div>
+      ))}
+      <button onClick={closeModal} className="bg-blue-500 text-white px-4 py-2 rounded-md mt-4">Close</button>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 };
