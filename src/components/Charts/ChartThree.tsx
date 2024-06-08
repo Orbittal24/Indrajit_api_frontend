@@ -5,7 +5,9 @@ import ReactApexChart from "react-apexcharts";
 interface ChartThreeState {
   series: number[];
   title: string;
+  title1: string;
   series1: number[];
+  series2: string;
 
   vision1OK: number;
 }
@@ -54,21 +56,26 @@ const options: ApexOptions = {
   ],
 };
 
-const ChartThree: React.FC<{ title: string , series1:number[] }> = ({ title ,series1  }) => {
+const ChartThree: React.FC<{ title: string , title1: string, series1:number[], series2: string }> = ({ title ,series1, series2 ,title1 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [series, setSeries] = useState<number[]>([0,0]);
 
  
 console.log(series);
   return (
+    
     <div className="col-span-6 rounded-sm border border-stroke bg-white px-5 pb-5 pt-7.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:col-span-3">
       <div className="mb-3 justify-between gap-4 sm:flex">
         <div>
-          <h5 className="text-2xl font-semibold text-black dark:text-white">
-            {title}
+          <h1></h1>
+          <h2 className="text-3xl font-semibold text-black dark:text-white">
+            {title}</h2>
+            <h6 className="text-1xl font-semibold text-black dark:text-white">
+            {title1}</h6>
            
            
-          </h5>
+          
+          
         </div>
       </div>
 
@@ -85,6 +92,7 @@ console.log(series);
       </div>
 
       <div className="-mx-8 flex flex-wrap items-center justify-center gap-y-3">
+       
         <div className="w-full px-8 sm:w-1/2">
           <div className="flex w-full items-center">
             <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#4CAF50]"></span>
