@@ -1,16 +1,9 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
-import ChartOne from "../../components/Charts/ChartOne";
 import ChartThree from "../../components/Charts/ChartThree";
-import ChartTwo from "../../components/Charts/ChartTwo";
-import ChatCard from "../../components/Chat/ChatCard";
-import TableOne from "../../components/Tables/TableOne";
 import CardDataStats from "../../components/CardDataStats";
-import MapOne from "../../components/Maps/MapOne";
-import { Card, Col, Row } from "reactstrap";
+import { Card } from "reactstrap";
 import Header from "@/components/Header";
-import Link from "next/link";
 import DropdownButton from './DropdownButton';
 
 const ECommerce: React.FC = () => {
@@ -19,23 +12,25 @@ const ECommerce: React.FC = () => {
   const [vision2Series, setVision2Series] = useState<number[]>([0, 0]);
   const [weldingSeries, setWeldingSeries] = useState<number[]>([0, 0]);
   const [fpcbSeries, setFpcbSeries] = useState<number[]>([0, 0]);
-  const [moduleCount, setModuleCount] = useState<number>(0);
+  // const [moduleCount, setModuleCount] = useState<number>(0);
   const [currentShift, setCurrentShift] = useState<string>("");
-
+  const [v1diffrence, setV1Diff] = useState<number[]>([0]);
+  const [v2diffrence, setV2Diff] = useState<number[]>([0]);
+  const [weldingdiffrence, setWeldingDiff] = useState<number[]>([0]);
+  const [fpcbdiffrence, setFpcbDiff] = useState<number[]>([0]);
 
   const determineShift = () => {
     const currentTime = new Date();
     const currentHour = currentTime.getHours();
-    const currentMinute = currentTime.getMinutes();
 
-    if (currentHour >= 6 && (currentHour < 14 || (currentHour === 14 && currentMinute === 0))) {
+    if (currentHour >= 6 && currentHour < 14) {
       return "A";
-    } else {
+    } else if (currentHour >= 14 && currentHour < 22) {
       return "B";
+    } else {
+      return "C";
     }
   };
-
-  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,14 +41,51 @@ const ECommerce: React.FC = () => {
         }
         const result = await response.json();
         const data = result.data[0];
+        console.log("swamii",data);
+        
 
-        console.log("data", data);
+        const shift = determineShift();
+        let vision1, vision2, welding, fpcb,moduleCount1,v1diff,v2diff,weldingdiff,fpcbdiff;
 
-        setVision1Series([data.vision_1AllOKCount, data.vision_1AllNotOKCount]);
-        setVision2Series([data.vision_2AllOKCount, data.vision_2AllNotOKCount]);
-        setWeldingSeries([data.weldingAllOKCount, data.weldingAllNotOKCount]);
-        setFpcbSeries([data.fpcb_weldingAllOKCount, data.fpcb_weldingAllNotOKCount]);
-        setModuleCount(data.moduleCount);
+        if (shift === "A") {
+          vision1 = [data.v1_first_shift_ok, data.v1_first_shift_notok];
+          vision2 = [data.v2_first_shift_ok, data.v2_first_shift_notok];
+          welding = [data.welding_first_shift_ok, data.welding_first_shift_notok];
+          fpcb = [data.fpcb_first_shift_ok, data.fpcb_first_shift_notok];
+          moduleCount1= [data.module_first_shift_total];
+          v1diff = [data.v1_fristshift_Diff];
+          v2diff = [data.v2_fristshift_Diff];
+          weldingdiff = [data.welding_fristshift_Diff];
+          fpcbdiff = [data.fpcb_fristshift_Diff];
+        } else if (shift === "B") {
+          vision1 = [data.v1_second_shift_ok, data.v1_second_shift_notok];
+          vision2 = [data.v2_second_shift_ok, data.v2_second_shift_notok];
+          welding = [data.welding_second_shift_ok, data.welding_second_shift_notok];
+          fpcb = [data.fpcb_second_shift_ok, data.fpcb_second_shift_notok];
+          moduleCount1= [data.module_second_shift_total];
+          v1diff = [data.v1_secoundshift_Diff];
+          v2diff = [data.v2_secoundshift_Diff];
+          weldingdiff = [data.welding_secoundshift_Diff];
+          fpcbdiff = [data.fpcb_secoundshift_Diff];
+         
+          
+        } else {
+          vision1 = [data.v1_third_shift_ok, data.v1_third_shift_notok];
+          vision2 = [data.v2_third_shift_ok, data.v2_third_shift_notok];
+          welding = [data.welding_third_shift_ok, data.welding_third_shift_notok];
+          fpcb = [data.fpcb_third_shift_ok, data.fpcb_third_shift_notok];
+          moduleCount1= [data.module_third_shift_total];
+        }
+
+        setVision1Series(vision1);
+        setVision2Series(vision2);
+        setWeldingSeries(welding);
+        setFpcbSeries(fpcb);
+        // setModuleCount(moduleCount1);
+        setV1Diff(v1diff);
+        setV2Diff(v2diff);
+        setWeldingDiff(weldingdiff);
+        setFpcbDiff(fpcbdiff);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -69,19 +101,13 @@ const ECommerce: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  console.log('setVision1Series', vision1Series);
-  console.log('setVision2Series', vision2Series);
-  console.log('weldingSeries', weldingSeries);
-  console.log('fpcbSeries', fpcbSeries);
-  console.log('moduleCount', moduleCount);
-
   return (
     <>
       <Header />
-      <DropdownButton href="/tables">DATA</DropdownButton>
+      {/* <DropdownButton href="/tables">DATA</DropdownButton> */}
       <Card className="p-5">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3 2xl:gap-7.5">
-        <CardDataStats total={`Shift  : ${currentShift}`}>
+          <CardDataStats total={`Shift: ${currentShift}`}>
             <svg
               className="fill-success dark:fill-white"
               width="22"
@@ -95,35 +121,29 @@ const ECommerce: React.FC = () => {
                 fill=""
               />
               <path
-                d="M11 10.9219C9.38438 10.9219 8.07812 9.61562 8.07812 8C8.07812 6.38438 9.38438 5.07812 11 5.07812C12.6156 5.07812 13.9219 6.38438 13.9219 8C13.9219 9.61562 12.6156 10.9219 11 10.9219ZM11 6.625C10.2437 6.625 9.625 7.24375 9.625 8C9.625 8.75625 10.2437 9.375 11 9.375C11.7563 9.375 12.375 8.75625 12.375 8C12.375 7.24375 11.7563 6.625 11 6.625Z"
+                d="M11 10.9219C9.38438 10.9219 8.07812 9.61562 8.07812 8C8.07812 6.38438 9.38438 5.07812 11 5.07812C12.6156 5.07812 13.9219 6.38438 13.9219 8C13.9219 9.61562 12.6156 10.9219 11 10.9219ZM11 6.52501C10.0344 6.52501 9.25312 7.30626 9.25312 8.27188C9.25312 9.23751 10.0344 10.0188 11 10.0188C11.9656 10.0188 12.7469 9.23751 12.7469 8.27188C12.7469 7.30626 11.9656 6.52501 11 6.52501Z"
                 fill=""
               />
             </svg>
           </CardDataStats>
-          <CardDataStats total={`Total Module Count: ${moduleCount}`}>
+          <CardDataStats total={`V1 CycleTime(min): ${v1diffrence}/480`}
+          total1={`V2 CycleTime(min): ${v2diffrence}/480`}>
             <svg
-              className="fill-danger dark:fill-white"
-              width="20"
-              height="22"
-              viewBox="0 0 20 22"
+              className="fill-warning"
+              width="22"
+              height="18"
+              viewBox="0 0 22 18"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
-                d="M11.7531 16.4312C10.3781 16.4312 9.27808 17.5312 9.27808 18.9062C9.27808 20.2812 10.3781 21.3812 11.7531 21.3812C13.1281 21.3812 14.2281 20.2812 14.2281 18.9062C14.2281 17.5656 13.0937 16.4312 11.7531 16.4312ZM11.7531 19.8687C11.2375 19.8687 10.825 19.4562 10.825 18.9406C10.825 18.425 11.2375 18.0125 11.7531 18.0125C12.2687 18.0125 12.6812 18.425 12.6812 18.9406C12.6812 19.4219 12.2343 19.8687 11.7531 19.8687Z"
-                fill=""
-              />
-              <path
-                d="M5.22183 16.4312C3.84683 16.4312 2.74683 17.5312 2.74683 18.9062C2.74683 20.2812 3.84683 21.3812 5.22183 21.3812C6.59683 21.3812 7.69683 20.2812 7.69683 18.9062C7.69683 17.5656 6.56245 16.4312 5.22183 16.4312ZM5.22183 19.8687C4.7062 19.8687 4.2937 19.4562 4.2937 18.9406C4.2937 18.425 4.7062 18.0125 5.22183 18.0125C5.73745 18.0125 6.14995 18.425 6.14995 18.9406C6.14995 19.4219 5.73745 19.8687 5.22183 19.8687Z"
-                fill=""
-              />
-              <path
-                d="M19.0062 0.618744H17.15C16.325 0.618744 15.6031 1.23749 15.5 2.06249L14.95 6.01562H1.37185C1.0281 6.01562 0.684353 6.18749 0.443728 6.46249C0.237478 6.73749 0.134353 7.11562 0.237478 7.45937C0.237478 7.49374 0.237478 7.49374 0.237478 7.52812L2.36873 13.9562C2.50623 14.4375 2.9531 14.7812 3.46873 14.7812H12.9562C14.2281 14.7812 15.3281 13.8187 15.5 12.5469L16.9437 2.26874C16.9437 2.19999 17.0125 2.16562 17.0812 2.16562H18.9375C19.35 2.16562 19.7281 1.82187 19.7281 1.37499C19.7281 0.928119 19.4187 0.618744 19.0062 0.618744ZM14.0219 12.3062C13.9531 12.8219 13.5062 13.2 12.9906 13.2H3.7781L1.92185 7.56249H14.7094L14.0219 12.3062Z"
+                d="M19.0062 0.618744H2.99372C1.3406 0.618744 0 1.96874 0 3.62187V14.3781C0 16.0312 1.3406 17.3812 2.99372 17.3812H19.0062C20.6594 17.3812 22 16.0312 22 14.3781V3.62187C22 1.96874 20.6594 0.618744 19.0062 0.618744ZM19.0062 2.06562C19.525 2.06562 19.9625 2.50624 19.9625 3.02501V5.39374H2.03748V3.02501C2.03748 2.50624 2.475 2.06562 2.99372 2.06562H19.0062ZM1.2156 11.8812V7.16562H3.28435L3.70935 9.09062C3.87185 9.81249 4.5531 10.3156 5.2906 10.3156C6.0281 10.3156 6.70935 9.81249 6.87185 9.09062L7.29685 7.16562H12.75L12.3031 10.7156C12.2218 11.3406 11.6625 11.8125 11.0343 11.8125C10.4062 11.8125 9.8656 11.3406 9.76872 10.7156C9.71247 10.3844 9.40935 10.1406 9.07185 10.1406C8.7156 10.1406 8.44372 10.4125 8.4906 10.7687C8.6781 12.1187 9.77185 13.1375 11.1125 13.1375C12.2125 13.1375 13.1968 12.3156 13.3906 11.2187L13.8687 7.67812H15.5906C15.8531 7.67812 16.0375 7.90937 15.9968 8.17187L15.5406 11.6125C15.4937 11.9562 15.7562 12.2562 16.1 12.3062C16.4437 12.3562 16.7406 12.1031 16.7906 11.7594L17.2468 8.31874C17.3156 7.83437 16.9312 7.39374 16.4406 7.39374H14.1906L14.5531 4.49687H18.6968V11.8812H1.2156ZM11.4812 4.49687H6.87185C6.375 4.49687 5.925 4.83437 5.78435 5.31562L5.5931 6.06562H4.61872C4.175 6.06562 3.76872 6.34687 3.60622 6.76874L3.2156 8.06562H1.2156V5.39374H11.4812V4.49687ZM1.2156 14.8031V13.3375H18.6968V14.8031C18.6968 15.3219 18.2594 15.7625 17.7406 15.7625H2.17185C1.6531 15.7625 1.2156 15.3219 1.2156 14.8031Z"
                 fill=""
               />
             </svg>
           </CardDataStats>
-          <CardDataStats total="ERROR CODE : 0" >
+          <CardDataStats total={`Welding CycleTime(min): ${weldingdiffrence}/480`}
+          total1={`FPCB CycleTime(min): ${fpcbdiffrence}/480`}>
             <svg
               className="fill-warning dark:fill-white"
               width="22"
@@ -143,19 +163,23 @@ const ECommerce: React.FC = () => {
             </svg>
           </CardDataStats>
         </div>
-
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-0 xl:grid-cols-4 2xl:gap-7.5">
           <Card className="m-4">
-            <ChartThree title="Vision 1" series1={vision1Series} />
+          <ChartThree title="Vision 1" series1={vision1Series}
+          title1={`c_module: ${fpcbdiffrence}`}/>
+
           </Card>
           <Card className="m-4">
-            <ChartThree title="Vision 2" series1={vision2Series} />
+            <ChartThree title="Vision 2" series1={vision2Series} 
+             title1={`c_module: ${fpcbdiffrence}`}/>
           </Card>
           <Card className="m-4">
-            <ChartThree title="Welding" series1={weldingSeries} />
+            <ChartThree title="Welding" series1={weldingSeries} 
+             title1={`c_module: ${fpcbdiffrence}`}/>
           </Card>
           <Card className="m-4">
-            <ChartThree title="FPCB Welding" series1={fpcbSeries} />
+            <ChartThree title="FPCB Welding" series1={fpcbSeries} 
+             title1={`c_module: ${fpcbdiffrence}`}/>
           </Card>
         </div>
       </Card>
@@ -164,3 +188,6 @@ const ECommerce: React.FC = () => {
 };
 
 export default ECommerce;
+
+
+
