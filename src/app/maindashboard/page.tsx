@@ -18,6 +18,7 @@ const ECommerce: React.FC = () => {
   const [v2diffrence, setV2Diff] = useState<number[]>([0]);
   const [weldingdiffrence, setWeldingDiff] = useState<number[]>([0]);
   const [fpcbdiffrence, setFpcbDiff] = useState<number[]>([0]);
+  const [modulebarcode, setModule] =  useState<string>("");
 
   const determineShift = () => {
     const currentTime = new Date();
@@ -45,7 +46,7 @@ const ECommerce: React.FC = () => {
         
 
         const shift = determineShift();
-        let vision1, vision2, welding, fpcb,moduleCount1,v1diff,v2diff,weldingdiff,fpcbdiff;
+        let vision1, vision2, welding, fpcb,moduleCount1,v1diff,v2diff,weldingdiff,fpcbdiff,modulebarcode1;
 
         if (shift === "A") {
           vision1 = [data.v1_first_shift_ok, data.v1_first_shift_notok];
@@ -57,6 +58,7 @@ const ECommerce: React.FC = () => {
           v2diff = [data.v2_fristshift_Diff];
           weldingdiff = [data.welding_fristshift_Diff];
           fpcbdiff = [data.fpcb_fristshift_Diff];
+          modulebarcode1 = [data.latest_module_barcode];
         } else if (shift === "B") {
           vision1 = [data.v1_second_shift_ok, data.v1_second_shift_notok];
           vision2 = [data.v2_second_shift_ok, data.v2_second_shift_notok];
@@ -67,6 +69,8 @@ const ECommerce: React.FC = () => {
           v2diff = [data.v2_secoundshift_Diff];
           weldingdiff = [data.welding_secoundshift_Diff];
           fpcbdiff = [data.fpcb_secoundshift_Diff];
+          modulebarcode1 = [data.latest_module_barcode];
+        
          
           
         } else {
@@ -75,6 +79,7 @@ const ECommerce: React.FC = () => {
           welding = [data.welding_third_shift_ok, data.welding_third_shift_notok];
           fpcb = [data.fpcb_third_shift_ok, data.fpcb_third_shift_notok];
           moduleCount1= [data.module_third_shift_total];
+          modulebarcode1 = [data.latest_module_barcode];
         }
 
         setVision1Series(vision1);
@@ -86,6 +91,8 @@ const ECommerce: React.FC = () => {
         setV2Diff(v2diff);
         setWeldingDiff(weldingdiff);
         setFpcbDiff(fpcbdiff);
+        setModule(modulebarcode1)
+
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -166,20 +173,20 @@ const ECommerce: React.FC = () => {
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-0 xl:grid-cols-4 2xl:gap-7.5">
           <Card className="m-4">
           <ChartThree title="Vision 1" series1={vision1Series}
-          title1={`c_module: .`}/>
+          title1={`c_module: ${modulebarcode}`}/>
 
           </Card>
           <Card className="m-4">
             <ChartThree title="Vision 2" series1={vision2Series} 
-             title1={`c_module: .`}/>
+             title1={`c_module: `}/>
           </Card>
           <Card className="m-4">
             <ChartThree title="Welding" series1={weldingSeries} 
-             title1={`c_module: .`}/>
+             title1={`c_module: `}/>
           </Card>
           <Card className="m-4">
             <ChartThree title="FPCB Welding" series1={fpcbSeries} 
-             title1={`c_module:.`}/>
+             title1={`c_module: `}/>
           </Card>
         </div>
       </Card>
