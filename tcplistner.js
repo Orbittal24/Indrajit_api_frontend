@@ -18,7 +18,8 @@ console.log("Connected to", mainDBConfig);
 const mainDBConfig2 = {
   user: 'ReplusUser',
   password: 'ReplusPwd',
-  server: 'DESKTOP-EDK3VMS\\SQLEXPRESS',
+  //server: 'DESKTOP-EDK3VMS\\SQLEXPRESS',
+  server: 'DESKTOP-PQOG0FT\\SQLEXPRESS',
   database: 'REPLUSBATTDB_V0100',
   options: {
     encrypt: false,
