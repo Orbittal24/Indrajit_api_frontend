@@ -209,7 +209,7 @@ async function processVision1(data, scannedBarcode) {
     if (statusToStore) {
       const v1error = data.vision1.ERRORStatus;
 
-      const queryString = `SELECT *  FROM [REPLUSBATTDB_V0100].[dbo].[june_2024] WHERE ModuleCode = '${moduleBarcode}'`;
+      const queryString = `SELECT *  FROM [REPLUSBATTDB_V0100].[dbo].[Cell_sorting_june_2024] WHERE ModuleCode = '${moduleBarcode}'`;
 
       const mainPoolConnectResult2 = await mainPoolConnect2;
       const secondResult = await mainPoolConnectResult2
