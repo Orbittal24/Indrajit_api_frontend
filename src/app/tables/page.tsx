@@ -21,6 +21,7 @@ const TablesPage = () => {
         {/* <TableOne />
         <TableTwo /> */}
         <TableThree />
+          <TableOne />
       </div>
     </DefaultLayout>
   );
