@@ -166,7 +166,7 @@ const ECommerce: React.FC = () => {
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-0 xl:grid-cols-4 2xl:gap-7.5">
           <Card className="m-4">
           <ChartThree title="Vision 1" series1={vision1Series}
-          title1={`c_module: 01TMB0001`}/>
+          title1={`c_module: .`}/>
 
           </Card>
           <Card className="m-4">
