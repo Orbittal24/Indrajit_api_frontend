@@ -182,11 +182,11 @@ const ECommerce: React.FC = () => {
           </Card>
           <Card className="m-4">
             <ChartThree title="Welding" series1={weldingSeries} 
-             title1={`c_module: `}/>
+             title1={`c_module: ${modulebarcode}`}/>
           </Card>
           <Card className="m-4">
             <ChartThree title="FPCB Welding" series1={fpcbSeries} 
-             title1={`c_module: `}/>
+            title1={`c_module: ${modulebarcode}`}/>
           </Card>
         </div>
       </Card>
