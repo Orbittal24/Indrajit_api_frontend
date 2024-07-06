@@ -252,6 +252,7 @@ async function processVision1(data, scannedBarcode) {
                 SELECT TOP 1 v1_end_date
                 FROM [dbo].[clw_station_status]
                 WHERE  sr_no < (SELECT sr_no FROM LatestRow)
+                 AND CONVERT(date, v1_end_date) = CONVERT(date, GETDATE())
                 ORDER BY sr_no DESC;
             `);
 
@@ -403,6 +404,7 @@ async function processVision2(data) {
                 FROM [dbo].[clw_station_status]
                 WHERE 
               sr_no < (SELECT sr_no FROM LatestRow)
+               AND CONVERT(date, v2_end_date) = CONVERT(date, GETDATE())
                 ORDER BY sr_no DESC;
             `);
 
@@ -557,6 +559,7 @@ async function welding(data) {
             FROM [dbo].[clw_station_status]
             WHERE 
           sr_no < (SELECT sr_no FROM LatestRow)
+           AND CONVERT(date, welding_end_date) = CONVERT(date, GETDATE())
             ORDER BY sr_no DESC;
         `);
 
@@ -715,6 +718,7 @@ async function fpcb(data) {
             FROM [dbo].[clw_station_status]
             WHERE 
           sr_no < (SELECT sr_no FROM LatestRow)
+             AND CONVERT(date, fpcb_end_date) = CONVERT(date, GETDATE())
             ORDER BY sr_no DESC;
         `);
 
