@@ -8,7 +8,7 @@ const TableOne = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5501/api/WeekMonthDiff');
+       const response = await fetch('http://localhost:5501/api/WeekMonthDiff');
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
