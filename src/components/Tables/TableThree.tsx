@@ -228,9 +228,9 @@ const TableThree = () => {
                 <th className="min-w-[2px] px-4 py-4 font-medium text-black dark:text-white xl:pl-11">
                   #
                 </th>
-                <th className="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">
+{/*                 <th className="min-w-[120px] px-4 py-4 font-medium text-black dark:text-white">
                   Pack Name
-                </th>
+                </th> */}
                 <th className="px-4 py-4 font-medium text-black dark:text-white">
                   Module Barcode
                 </th>
@@ -256,9 +256,9 @@ const TableThree = () => {
                       {key + 1 + (currentPage - 1) * entriesToShow}
                     </h5>
                   </td>
-                  <td className="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
+{/*                   <td className="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
                     <p className="text-black dark:text-white">{packageItem.battery_pack_name}</p>
-                  </td>
+                  </td> */}
                   <td className="border-b border-[#eee] px-4 py-5 dark:border-strokedark">
                     <p className="text-black dark:text-white">{packageItem.module_barcode}</p>
                   </td>
