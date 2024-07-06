@@ -15,29 +15,29 @@ const mainDBConfig = {
 };
 console.log("Connected to", mainDBConfig);
 
-const mainDBConfig2 = {
-  user: 'ReplusUser',
-  password: 'ReplusPwd',
-  //server: 'DESKTOP-EDK3VMS\\SQLEXPRESS',
-  server: 'DESKTOP-PQOG0FT\\SQLEXPRESS',
-  database: 'REPLUSBATTDB_V0100',
-  options: {
-    encrypt: false,
-    trustServerCertificate: true,
-  },
-};
-console.log("Connected to", mainDBConfig2);
+// const mainDBConfig2 = {
+//   user: 'ReplusUser',
+//   password: 'ReplusPwd',
+//   //server: 'DESKTOP-EDK3VMS\\SQLEXPRESS',
+//   server: 'DESKTOP-PQOG0FT\\SQLEXPRESS',
+//   database: 'REPLUSBATTDB_V0100',
+//   options: {
+//     encrypt: false,
+//     trustServerCertificate: true,
+//   },
+// };
+// console.log("Connected to", mainDBConfig2);
 
 // Create a SQL connection pool for mainDBConfig
 const mainPool = new sql.ConnectionPool(mainDBConfig);
 const mainPoolConnect = mainPool.connect();
 
 // Create a SQL connection pool for mainDBConfig2
-const mainPool2 = new sql.ConnectionPool(mainDBConfig2);
-const mainPoolConnect2 = mainPool2.connect();
+// const mainPool2 = new sql.ConnectionPool(mainDBConfig2);
+// const mainPoolConnect2 = mainPool2.connect();
 
 console.log("Connected to", mainDBConfig);
-console.log("Connected to", mainDBConfig2);
+// console.log("Connected to", mainDBConfig2);
 
 /////////////start_date///////////
 let globalFormattedDateTime;
@@ -209,9 +209,9 @@ async function processVision1(data, scannedBarcode) {
     if (statusToStore) {
       const v1error = data.vision1.ERRORStatus;
 
-      const queryString = `SELECT *  FROM [REPLUSBATTDB_V0100].[dbo].[Cell_sorting_june_2024] WHERE ModuleCode = '${moduleBarcode}'`;
+      const queryString = `SELECT *  FROM [replus_treceability].[dbo].[cell_sorting_backup] WHERE ModuleCode = '${moduleBarcode}'`;
 
-      const mainPoolConnectResult2 = await mainPoolConnect2;
+      const mainPoolConnectResult2 = await mainPoolConnect;
       const secondResult = await mainPoolConnectResult2
         .request()
         .query(queryString);
