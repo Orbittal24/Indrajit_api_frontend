@@ -12,7 +12,8 @@ const TableOne = () => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        const data = await response.json();
+       const result = await response.json();
+        const data = result.data[0];
         console.log("swamii", data);
 
         const formattedData = [
