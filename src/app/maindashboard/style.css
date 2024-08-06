@@ -1,0 +1,14 @@
+.card-data-stats .total-stats {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .card-data-stats .total {
+    margin-bottom: 1rem; /* Adjust spacing as needed */
+  }
+  
+  .card-data-stats .icon {
+    /* Your existing styles for the icon */
+    height: 80px;
+  }
+  
