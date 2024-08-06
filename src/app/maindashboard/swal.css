@@ -1,0 +1,14 @@
+/* Your CSS file */
+.swal-button--custom {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .swal-button--custom:hover {
+    background-color: #45a049;
+  }
+  
