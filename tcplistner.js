@@ -326,7 +326,7 @@ async function processVision2(data) {
           await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${v2_status}', v2_error = '${v2_error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`);
           console.log("Data updated successfully in clw_station_status");
           
-          await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v2_live_status = '0'`);
+          await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v2_live_status = '0' WHERE module_barcode = '${module_barcode}'`);
           console.log("v2LIVESTATUS:::", `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v2_live_status = '0'`);
 
         
@@ -442,8 +442,8 @@ async function welding(data) {
           await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${welding_status}', welding_error = '${welding_error}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}' WHERE module_barcode = '${module_barcode}'`);
           console.log("Data updated successfully in clw_station_status");
           
-          await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET welding_live_status = '0'`);
-          console.log("weldingqueryyy:::", `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET welding_live_status = '0'`);
+          await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET welding_live_status = '0' WHERE module_barcode = '${module_barcode}'`);
+          console.log("weldingqueryyy:::", `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET welding_live_status = '0' WHERE module_barcode = '${module_barcode}'`);
 
           previousWeldingStatus = welding_status; // Update previousWeldingStatus to the current status
           continueChecking = false; // Stop checking after successful update
