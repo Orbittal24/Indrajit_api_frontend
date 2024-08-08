@@ -40,7 +40,7 @@ const ECommerce: React.FC = () => {
   };
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080');
+    const ws = new WebSocket('ws://localhost:6080');
 
     ws.onopen = () => {
       console.log('WebSocket connection established');
