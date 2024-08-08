@@ -2,7 +2,7 @@
 const net = require("net");
 const sql = require("mssql");
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: 7080 });
 
 // wss.on('connection', (ws) => {
 //   console.log('WebSocket client connected');
@@ -29,7 +29,7 @@ wss.on('connection', (ws) => {
   // ws.send('Hello Client');
 });
 
-console.log('WebSocket server running on ws://localhost:8080');
+console.log('WebSocket server running on ws://localhost:7080');
 
 const mainDBConfig = {
   user: "admin2",
