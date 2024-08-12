@@ -18,9 +18,9 @@ wss.on('connection', (ws) => {
     console.log('Received:', message);
   });
 
-  ws.on('close', () => {
-    console.log('WebSocket client disconnected');
-  });
+  // ws.on('close', () => {
+  //   console.log('WebSocket client disconnected');
+  // });
 
   ws.on('error', (error) => {
     console.error('WebSocket error:', error);
