@@ -4,10 +4,10 @@ const axios = require('axios');
 
 // Database connection config
 const dbConfig = {
-  user: 'admin',
-  password: 'admin',
-  server: 'AMRUTA',
-  database: 'replus_treceability',
+ user: "admin2",
+  password: "reset@123",
+  server: "REP-TRACE",
+  database: "replus_treceability",
   options: {
     encrypt: false,
     trustServerCertificate: true,
