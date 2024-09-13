@@ -1,14 +1,32 @@
+.card-content {
+  white-space: pre-wrap; /* Allows long text to wrap */
+  word-wrap: break-word; /* Breaks long text into next line if necessary */
+  overflow: hidden; /* Hides any overflowed content */
+  text-overflow: ellipsis; /* Shows ... if the text is too long */
+  max-height: 200px; /* You can adjust the height based on your requirement */
+}
+
 .card-data-stats .total-stats {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .card-data-stats .total {
-    margin-bottom: 1rem; /* Adjust spacing as needed */
-  }
-  
-  .card-data-stats .icon {
-    /* Your existing styles for the icon */
-    height: 80px;
-  }
+  display: flex;
+  flex-direction: column;
+}
+
+.card-data-stats .total {
+  margin-bottom: 1rem; /* Adjust spacing as needed */
+}
+
+.card-data-stats .icon {
+  height: 80px;
+}
+
+.module-barcode-container {
+margin-top: 20px;
+font-family: Arial, sans-serif;
+}
+
+.module-barcode-container p {
+margin: 5px 0;
+}
+
+
   
