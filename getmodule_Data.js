@@ -73,7 +73,7 @@ app.post("/checkBarcode", async (req, res) => {
       }
     } else {
       res.status(404).json({
-        message: "ModuleCode not found in replus_voltage_ir_admin.",
+        message: "ModuleCode not found in voltage_ir_admin.",
       });
     }
   } catch (error) {
