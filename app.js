@@ -206,7 +206,7 @@ async function singlemodule(barcode, socket) {
 async function checkAndProcessRFIDTags(socket) {
   // Continuously check for RFID tags (with some delay to avoid blocking)
   const checkInterval = 1000;  // 1 second interval between checks
-  const maxRetries = 10;       // Maximum attempts before timing out
+  const maxRetries = 50;       // Maximum attempts before timing out
 
   for (let i = 0; i < maxRetries; i++) {
     if (tags && tags.vision1) {
