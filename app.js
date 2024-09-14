@@ -395,7 +395,7 @@ async function processRFIDTags(tags, socket) {
       }
 
       // Send success message to frontend
-      socket.write(JSON.stringify({ message: 'Multiple barcodes and RFID linked successfully!' }));
+      // socket.write(JSON.stringify({ message: 'Multiple barcodes and RFID linked successfully!' }));
 
       // Reset tags only after everything is processed
       tags = null;
