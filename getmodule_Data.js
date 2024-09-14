@@ -56,7 +56,11 @@ app.post("/checkBarcode", async (req, res) => {
 
 
       const cellSortingResult = await queryDatabase(cellSortingQuery);
+      const cellSortingResultcount = await queryDatabase(cellSortingQuerycount);
+     
       const cellSortingCount = cellSortingResult.recordset[0].count;
+      const cellSortingCount2 = cellSortingResultcount.recordset[0].count;
+     
 
       if (cellSortingCount === moduleCount) {
         res.status(200).json({
@@ -69,7 +73,7 @@ app.post("/checkBarcode", async (req, res) => {
           message: "Module not complete in cell sorting.",
           moduleCode,
           expectedCount: moduleCount,
-          foundCount: cellSortingQuerycount,
+          foundCount: cellSortingCount2,
         });
       }
     } else {
