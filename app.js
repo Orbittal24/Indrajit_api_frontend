@@ -102,7 +102,7 @@ const server = net.createServer(async (socket) => {
   
           // Call the API for each new barcode received
           try {
-            const apiUrl = 'http://127.0.0.1:4000/checkBarcode';
+            const apiUrl = 'http://10.5.0.20:4000/checkBarcode';
   
             const response = await axios.post(apiUrl, {
               scannedBarcode: barcode,
