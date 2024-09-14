@@ -43,6 +43,7 @@ app.post("/checkBarcode", async (req, res) => {
   try {   
     // Query to get the count of modules for the extracted module code
     const moduleCountQuery = `SELECT COUNT(*) AS count FROM voltage_ir_admin WHERE ModuleCode = '${moduleCode}'`;
+    console.log("moduleCountQuery::", moduleCountQuery)
 
     const moduleCountResult = await queryDatabase(moduleCountQuery);
     const moduleCount = moduleCountResult.recordset[0].count;
@@ -70,7 +71,7 @@ app.post("/checkBarcode", async (req, res) => {
       }
     } else {
       res.status(404).json({
-        message: "ModuleCode not found in replus_voltage_ir_admin.",
+        message: "ModuleCode not found in voltage_ir_admin.",
       });
     }
   } catch (error) {
