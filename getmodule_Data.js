@@ -44,7 +44,7 @@ app.post("/checkBarcode", async (req, res) => {
 
   try {   
     // Query to get the count of modules for the extracted module code
-    const moduleCountQuery = `SELECT COUNT(*) AS count FROM replus_voltage_ir_admin WHERE ModuleCode = '${moduleCode}'`;
+    const moduleCountQuery = `SELECT COUNT(*) AS count FROM voltage_ir_admin WHERE ModuleCode = '${moduleCode}'`;
 
     const moduleCountResult = await queryDatabase(moduleCountQuery);
     const moduleCount = moduleCountResult.recordset[0].count;
