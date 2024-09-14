@@ -51,7 +51,9 @@ app.post("/checkBarcode", async (req, res) => {
 
     if (moduleCount > 0) {
       // Query to check if the same number of entries exist in cell_sorting_backup
-      const cellSortingQuery = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode LIKE '${moduleCode}%'`;
+      // const cellSortingQuery = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode LIKE '${moduleCode}%'`;
+
+           const cellSortingQuery = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode = '${scannedBarcode}'`;
      
       const cellSortingResult = await queryDatabase(cellSortingQuery);
 
