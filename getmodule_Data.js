@@ -6,10 +6,10 @@ app.use(express.json());
 
 // Database Connection
 const dbConfig = {
-  user: 'admin',
-  password: 'admin',
-  server: 'AMRUTA',
-  database: 'replus_treceability',
+ user: "admin2",
+  password: "reset@123",
+  server: "REP-TRACE",
+  database: "replus_treceability",
   options: {
     encrypt: false,
     trustServerCertificate: true,
@@ -29,8 +29,6 @@ async function queryDatabase(query) {
 // API to check barcode and count entries
 app.post("/checkBarcode", async (req, res) => {
   const { scannedBarcode } = req.body;
-  
-  // Log the received barcode for debugging
   console.log("scannedBarcode::", scannedBarcode);
   
   // Check if scannedBarcode is provided and valid
