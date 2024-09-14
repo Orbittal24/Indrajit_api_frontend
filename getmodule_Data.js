@@ -52,15 +52,10 @@ app.post("/checkBarcode", async (req, res) => {
     if (moduleCount > 0) {
       // Query to check if the same number of entries exist in cell_sorting_backup
       const cellSortingQuery = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode LIKE '${moduleCode}%'`;
-      const cellSortingQuerycount = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode = '${scannedBarcode}%'`;
-
-
+     
       const cellSortingResult = await queryDatabase(cellSortingQuery);
-      const cellSortingResultcount = await queryDatabase(cellSortingQuerycount);
-     
+
       const cellSortingCount = cellSortingResult.recordset[0].count;
-      const cellSortingCount2 = cellSortingResultcount.recordset[0].count;
-     
 
       if (cellSortingCount === moduleCount) {
         res.status(200).json({
@@ -73,7 +68,7 @@ app.post("/checkBarcode", async (req, res) => {
           message: "Module not complete in cell sorting.",
           moduleCode,
           expectedCount: moduleCount,
-          foundCount: cellSortingCount2,
+          foundCount: cellSortingCount,
         });
       }
     } else {
