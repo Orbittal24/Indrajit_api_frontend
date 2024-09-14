@@ -289,7 +289,7 @@ async function processRFIDTagsSingle(tags, socket) {
     //     console.log(`CycleStartConfirm was false. Now set to true for RFID: ${RFID}`);
     // }
 
-      // Call the function here to notify Hercules
+      // Call the function 
       await writeCycleStartConfirmToHercules(RFID, socket);
 
 
@@ -430,7 +430,7 @@ async function writeCycleStartConfirmToHercules(RFID, socket) {
       // Send payload to Hercules through the TCP socket
       socket.write(payload);  // Directly write the message to the socket
 
-      console.log(`Sent CycleStartConfirm set to true for RFID: ${RFID} to Hercules via socket.`);
+      console.log(`Sent CycleStartConfirm set to true for RFID: ${RFID}.`);
   } catch (error) {
       console.error('Error communicating with Hercules:', error.message);
   }
