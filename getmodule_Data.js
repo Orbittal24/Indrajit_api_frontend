@@ -29,6 +29,8 @@ async function queryDatabase(query) {
 // API to check barcode and count entries
 app.post("/checkBarcode", async (req, res) => {
   const { scannedBarcode } = req.body;
+  
+  // Log the received barcode for debugging
   console.log("scannedBarcode::", scannedBarcode);
   
   // Check if scannedBarcode is provided and valid
@@ -42,8 +44,7 @@ app.post("/checkBarcode", async (req, res) => {
 
   try {   
     // Query to get the count of modules for the extracted module code
-    const moduleCountQuery = `SELECT COUNT(*) AS count FROM voltage_ir_admin WHERE ModuleCode = '${moduleCode}'`;
-    console.log("moduleCountQuery::", moduleCountQuery)
+    const moduleCountQuery = `SELECT COUNT(*) AS count FROM replus_voltage_ir_admin WHERE ModuleCode = '${moduleCode}'`;
 
     const moduleCountResult = await queryDatabase(moduleCountQuery);
     const moduleCount = moduleCountResult.recordset[0].count;
@@ -51,6 +52,8 @@ app.post("/checkBarcode", async (req, res) => {
     if (moduleCount > 0) {
       // Query to check if the same number of entries exist in cell_sorting_backup
       const cellSortingQuery = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode LIKE '${moduleCode}%'`;
+      const cellSortingQuerycount = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode = '${scannedBarcode}%'`;
+
 
       const cellSortingResult = await queryDatabase(cellSortingQuery);
       const cellSortingCount = cellSortingResult.recordset[0].count;
@@ -66,12 +69,12 @@ app.post("/checkBarcode", async (req, res) => {
           message: "Module not complete in cell sorting.",
           moduleCode,
           expectedCount: moduleCount,
-          foundCount: cellSortingCount,
+          foundCount: cellSortingQuerycount,
         });
       }
     } else {
       res.status(404).json({
-        message: "ModuleCode not found in voltage_ir_admin.",
+        message: "ModuleCode not found in replus_voltage_ir_admin.",
       });
     }
   } catch (error) {
@@ -79,7 +82,6 @@ app.post("/checkBarcode", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 // Start the server
 const PORT = 4000;
 app.listen(PORT, () => {
