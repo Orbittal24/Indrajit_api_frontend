@@ -10,7 +10,6 @@ import Swal from "sweetalert2";
 import './swal.css'; 
 import './style.css';
 
-
 const ECommerce: React.FC = () => {
   const [vision1Series, setVision1Series] = useState<number[]>([0, 0]);
   const [vision2Series, setVision2Series] = useState<number[]>([0, 0]);
@@ -39,6 +38,40 @@ const ECommerce: React.FC = () => {
     }
   };
 
+  // WebSocket connection and popup logic
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8080');  // Connect to your backend WebSocket
+
+    ws.onopen = () => {
+      console.log('WebSocket connection established');
+    };
+
+    ws.onmessage = (event) => {
+      const messageData = JSON.parse(event.data);
+      setWsMessage(messageData.message);
+
+      // Show the message in a popup
+      Swal.fire({
+        title: messageData.message,
+        icon: 'success',
+        timer: 3000, // Popup duration of 2 seconds
+        showConfirmButton: false
+      });
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+
+    return () => {
+      // ws.close();
+    };
+  }, []);
+
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8080');
 
@@ -61,24 +94,24 @@ const ECommerce: React.FC = () => {
         setModuleBarcode4(messageData.data.moduleBarcode4 || "");
       }
 
-      Swal.fire({
-        title: messageData.message,
-        icon: 'success',
-        timer: 3000, 
-        showConfirmButton: false, 
-        customClass: {
-          confirmButton: 'swal-button--custom'
-        }
-      });
+      // Swal.fire({
+      //   title: messageData.message,
+      //   icon: 'success',
+      //   timer: 3000, 
+      //   showConfirmButton: false, 
+      //   customClass: {
+      //     confirmButton: 'swal-button--custom'
+      //   }
+      // });
     };
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
 
-    ws.onclose = () => {
-      console.log('WebSocket connection closed');
-    };
+    // ws.onclose = () => {
+    //   console.log('WebSocket connection closed');
+    // };
 
     const fetchData = async () => {
       try {
@@ -142,7 +175,7 @@ const ECommerce: React.FC = () => {
 
     return () => {
       clearInterval(interval);
-      ws.close();
+      // ws.close();
     };
   }, []);
 
@@ -171,10 +204,8 @@ const ECommerce: React.FC = () => {
           <CardDataStats total={`Welding CycleTime(min): ${weldingdifference}/480`}
             total1={`FPCB CycleTime(min): ${fpcbdifference}/480`}>
             <svg className="fill-warning dark:fill-white" width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21.1063 18.0469L19.3875 3.23126C19.2157 1.71876 17.9438 0.584381 16.3969 0.584381H5.56878C4.05628 0.584381 2.78441 1.71876 2.57816 3.23126L0.859406 18.0469C0.756281 18.9063 1.03128 19.7313 1.61566 20.3844C2.20003 21.0375 2.99066 21.3813 3.85003 21.3813H18.1157C18.975 21.3813 19.8 21.0031 20.35 20.3844C20.9 19.7656 21.2094 18.9063 21.1063 18.0469ZM19.2157 19.3531C18.9407 19.6625 18.5625 19.8344 18.15 19.8344H3.85003C3.43753 19.8344 3.05941 19.6625 2.78441 19.3531C2.50941 19.0438 2.37191 18.6313 2.44066 18.2188L4.12503 3.43751C4.19378 2.71563 4.81253 2.16563 5.56878 2.16563H16.4313C17.1532 2.16563 17.7719 2.71563 17.875 3.43751L19.5938 18.2531C19.6282 18.6656 19.4907 19.0438 19.2157 19.3531Z" fill=""/><path
-                d="M14.3345 5.29375C13.922 5.39688 13.647 5.80938 13.7501 6.22188C13.7845 6.42813 13.8189 6.63438 13.8189 6.80625C13.8189 8.35313 12.547 9.625 11.0001 9.625C9.45327 9.625 8.1814 8.35313 8.1814 6.80625C8.1814 6.6 8.21577 6.42813 8.25015 6.22188C8.35327 5.80938 8.07827 5.39688 7.66577 5.29375C7.25327 5.19063 6.84077 5.46563 6.73765 5.87813C6.6689 6.1875 6.63452 6.49688 6.63452 6.80625C6.63452 9.2125 8.5939 11.1719 11.0001 11.1719C13.4064 11.1719 15.3658 9.2125 15.3658 6.80625C15.3658 6.49688 15.3314 6.1875 15.2626 5.87813C15.1595 5.46563 14.747 5.225 14.3345 5.29375Z"
-                fill=""
-              />
+              <path d="M21.1063 18.0469L19.3875 3.23126C19.2157 1.71876 17.9438 0.584381 16.3969 0.584381H5.56878C4.05628 0.584381 2.78441 1.71876 2.57816 3.23126L0.859406 18.0469C0.756281 18.9063 1.03128 19.7313 1.61566 20.3844C2.20003 21.0375 2.99066 21.3813 3.85003 21.3813H18.1157C18.975 21.3813 19.8 21.0031 20.35 20.3844C20.9 19.7656 21.2094 18.9063 21.1063 18.0469ZM19.2157 19.3531C18.9407 19.6625 18.5625 19.8344 18.15 19.8344H3.85003C3.43753 19.8344 3.05941 19.6625 2.78441 19.3531C2.50941 19.0438 2.37191 18.6313 2.44066 18.2188L4.12503 3.43751C4.19378 2.71563 4.81253 2.16563 5.56878 2.16563H16.4313C17.1532 2.16563 17.7719 2.71563 17.875 3.43751L19.5938 18.2531C19.6282 18.6656 19.4907 19.0438 19.2157 19.3531Z" fill=""/>
+              <path d="M14.3345 5.29375C13.922 5.39688 13.647 5.80938 13.7501 6.22188C13.7845 6.42813 13.8189 6.63438 13.8189 6.80625C13.8189 8.35313 12.547 9.625 11.0001 9.625C9.45327 9.625 8.1814 8.35313 8.1814 6.80625C8.1814 6.6 8.21577 6.42813 8.25015 6.22188C8.35327 5.80938 8.07827 5.39688 7.66577 5.29375C7.25327 5.19063 6.84077 5.46563 6.73765 5.87813C6.6689 6.1875 6.63452 6.49688 6.63452 6.80625C6.63452 9.2125 8.5939 11.1719 11.0001 11.1719C13.4064 11.1719 15.3658 9.2125 15.3658 6.80625C15.3658 6.49688 15.3314 6.1875 15.2626 5.87813C15.1595 5.46563 14.747 5.225 14.3345 5.29375Z" fill=""/>
             </svg>
           </CardDataStats>
         </div>
@@ -182,7 +213,7 @@ const ECommerce: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-0 xl:grid-cols-4 2xl:gap-7.5">
         <Card className="m-4">
-          <ChartThree title="Vision 1" series1={vision1Series}  />
+          {vision1Series.length > 0 && <ChartThree title="Vision 1" series1={vision1Series} />}
           <div className="barcode-inputs">
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 1</label>
             <input type="text" value={moduleBarcode1.split(',')[0] || ''} className="module-input" readOnly />
@@ -192,7 +223,7 @@ const ECommerce: React.FC = () => {
         </Card>
         
         <Card className="m-4">
-          <ChartThree title="Vision 2" series1={vision2Series}  />
+          {vision2Series.length > 0 && <ChartThree title="Vision 2" series1={vision2Series} />}
           <div className="barcode-inputs">
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 1</label>
             <input type="text" value={moduleBarcode2.split(',')[0] || ''} className="module-input" readOnly />
@@ -202,7 +233,7 @@ const ECommerce: React.FC = () => {
         </Card>
         
         <Card className="m-4">
-          <ChartThree title="Welding" series1={weldingSeries}  />
+          {weldingSeries.length > 0 && <ChartThree title="Welding" series1={weldingSeries} />}
           <div className="barcode-inputs">
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 1</label>
             <input type="text" value={moduleBarcode3.split(',')[0] || ''} className="module-input" readOnly />
@@ -212,7 +243,7 @@ const ECommerce: React.FC = () => {
         </Card>
         
         <Card className="m-4">
-          <ChartThree title="FPCB Welding" series1={fpcbSeries}  />
+          {fpcbSeries.length > 0 && <ChartThree title="FPCB Welding" series1={fpcbSeries} />}
           <div className="barcode-inputs">
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 1</label>
             <input type="text" value={moduleBarcode4.split(',')[0] || ''} className="module-input" readOnly />
