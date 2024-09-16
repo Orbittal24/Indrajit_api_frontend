@@ -105,7 +105,7 @@ const server = net.createServer(async (socket) => {
   
           // Call the API for each new barcode received
           try {
-            const apiUrl = 'http://127.0.0.1:4000/checkBarcode';
+            const apiUrl = 'http://10.5.0.20:4000/checkBarcode';
   
             const response = await axios.post(apiUrl, {
               scannedBarcode: barcode,
@@ -187,7 +187,7 @@ function handleBarcodeScan(barcode) {
     scannedBarcodes.push(barcode);
     console.log('Scanned barcode:', barcode);
   } else {
-    console.log('More than 2 barcodes scanned, waiting for new RFID...');
+    // console.log('More than 2 barcodes scanned, waiting for new RFID...');
   }
 }
 
@@ -219,19 +219,18 @@ async function singlemodule(barcode, socket) {
 async function checkAndProcessRFIDTags(socket) {
   // Continuously check for RFID tags (with some delay to avoid blocking)
   const checkInterval = 1000;  // 1 second interval between checks
-  const maxRetries = 30;       // Maximum attempts before timing out
+  const maxRetries = 80;       // Maximum attempts before timing out
 
   for (let i = 0; i < maxRetries; i++) {
     if (tags && tags.vision1) {
       console.log('RFID tags received, processing now...');
       await processRFIDTagsSingle(tags, socket);
-      return;  // Exit the loop once processing is done
+      return;
     } else {
       console.log('Waiting for RFID tags...');
       await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
   }
-
   console.error('Timeout waiting for RFID tags.');
 }
 
@@ -308,7 +307,7 @@ async function processRFIDTagsSingle(tags, socket) {
 
       // Send success message to frontend for linking
       // socket.write(JSON.stringify({ message: 'Single barcode and RFID linked successfully!' }));
-      broadcast({ message: 'Module Barcode and RFID linked successfully!'});
+      broadcast({ message: 'Module Barcode & RFID linked successfully!'});
       console.log("Module Barcode and RFID linked successfully!");
       
       // Write the CycleStartConfirm tag to the client-side PLC and notify client
@@ -321,9 +320,7 @@ async function processRFIDTagsSingle(tags, socket) {
       //   status: 'changed to true',
       //   station: 'vision1'
       // };
-      // socket.write(JSON.stringify(statusChangeMessage));
-
-     
+      // socket.write(JSON.stringify(statusChangeMessage));    
     }
 
     // If OKStatus or NOKStatus is true, insert/update in clw_station_status table
@@ -345,7 +342,7 @@ async function processRFIDTags(tags, socket) {
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
-console.log("today_date Vision1::", today_date);
+  console.log("today_date Vision1::", today_date);
 
   if (!tags.vision1 || !tags.vision1.RFID) {
       console.error("No valid vision1 RFID received or vision1 is null/undefined.");
@@ -382,7 +379,7 @@ console.log("today_date Vision1::", today_date);
 
       // Send message to frontend
       // socket.write(JSON.stringify({ message: 'Multiple barcodes and RFID linked successfully!' }));
-      broadcast({ message: 'Module Barcode and RFID linked successfully'});
+      broadcast({ message: 'Module Barcode & RFID linked successfully'});
       console.log("Module Barcode and RFID linked successfully");
 
        // Write the CycleStartConfirm tag to the client-side PLC and notify client
@@ -443,7 +440,7 @@ async function writeCycleStartConfirm(RFID, socket, value) {
     });
 
     // Send payload to the client through the TCP socket
-    socket.write(payload); // Ensure this is being called
+    socket.write(payload);
 
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
@@ -461,7 +458,7 @@ async function writeCycleStartConfirmvision2(RFID, socket, value) {
     });
 
     // Send payload to the client through the TCP socket
-    socket.write(payload); // Ensure this is being called
+    socket.write(payload);
 
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
@@ -479,7 +476,7 @@ async function writeCycleStartConfirmwelding(RFID, socket, value) {
     });
 
     // Send payload to the client through the TCP socket
-    socket.write(payload); // Ensure this is being called
+    socket.write(payload);
 
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
@@ -497,7 +494,7 @@ async function writeCycleStartConfirmfpcb(RFID, socket, value) {
     });
 
     // Send payload to the client through the TCP socket
-    socket.write(payload); // Ensure this is being called
+    socket.write(payload); 
 
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
@@ -597,13 +594,13 @@ async function processVision1Single(singleBarcode, tags, socket) {
 
 // Function to process Vision 1 for multiple module 
 async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
+ 
   const curdate = new Date();
   const yr = curdate.getFullYear();
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
   console.log("today_date Vision1::", today_date);
-
   console.log(`Processing Vision1 for barcodes: ${scannedBarcode1}, ${scannedBarcode2}`);
 
   let combinedBarcodes = `${scannedBarcode1},${scannedBarcode2}`;
