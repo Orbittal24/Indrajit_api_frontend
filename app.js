@@ -4,6 +4,15 @@ const axios = require('axios');
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({ port: 6090 });
 
+// Broadcast to all WebSocket clients
+function broadcast(message) {
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(message));
+    }
+  });
+}
+
 // Database connection config
 const dbConfig = {
  user: "admin2",
