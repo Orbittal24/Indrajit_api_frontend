@@ -40,7 +40,7 @@ const ECommerce: React.FC = () => {
 
   // WebSocket connection and popup logic
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080');  // Connect to your backend WebSocket
+    const ws = new WebSocket('ws://localhost:6090');  // Connect to your backend WebSocket
 
     ws.onopen = () => {
       console.log('WebSocket connection established');
@@ -73,7 +73,7 @@ const ECommerce: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080');
+    const ws = new WebSocket('ws://localhost:6090');
 
     ws.onopen = () => {
       console.log('WebSocket connection established');
