@@ -2,7 +2,7 @@ const net = require('net');
 const sql = require('mssql');
 const axios = require('axios');
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: 6090 });
 
 // Database connection config
 const dbConfig = {
