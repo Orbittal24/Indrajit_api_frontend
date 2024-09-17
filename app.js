@@ -323,7 +323,7 @@ async function processRFIDTagsSingle(tags, socket) {
       console.log("Module Barcode and RFID linked successfully!");
 
       // Initialize the flag and start the interval to monitor the flag status
-      let V1Flag = 1; // Set the flag to 1 after the module and RFID are linked
+      
 
       // Start the interval to check the flag every second and write CycleStartConfirm accordingly
       const intervalId = setInterval(async () => {
@@ -396,8 +396,6 @@ async function processRFIDTags(tags, socket) {
     // Send success message to frontend for linking
     broadcast({ message: 'Module Barcode and RFID linked successfully' });
     console.log("Module Barcode and RFID linked successfully!");
-
-    let V1Flag = 1; // Set the flag to 1 after the module and RFID are linked
 
     // Start the interval to check the flag every second and write CycleStartConfirm 
     const intervalId = setInterval(async () => {
