@@ -50,6 +50,10 @@ var scannedBarcode2 = "";
 var tags = null;
 var previousTags = null;
 var lastProcessedRFID = null;
+var V1Flag = 1;
+var V2Flag = 1;
+var WeldingFlag = 1;
+var FPCBFlag = 1;
 
 // Create a server to listen on port 7080
 const server = net.createServer(async (socket) => {
@@ -315,35 +319,43 @@ async function processRFIDTagsSingle(tags, socket) {
       }
 
       // Send success message to frontend for linking
-      // socket.write(JSON.stringify({ message: 'Single barcode and RFID linked successfully!' }));
       broadcast({ message: 'Module Barcode and RFID linked successfully!'});
       console.log("Module Barcode and RFID linked successfully!");
-      
-      // Write the CycleStartConfirm tag to the client-side PLC and notify client
-      // After successful barcode processing, set to true
-      await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
 
-      // Notify the client that the CycleStartConfirm tag has been set
-      // const statusChangeMessage = {
-      //   tag: 'CycleStartConfirm',
-      //   RFID: RFID,
-      //   status: 'changed to true',
-      //   station: 'vision1'
-      // };
-      // socket.write(JSON.stringify(statusChangeMessage));    
+      // Initialize the flag and start the interval to monitor the flag status
+      let V1Flag = 1; // Set the flag to 1 after the module and RFID are linked
+
+      // Start the interval to check the flag every second and write CycleStartConfirm accordingly
+      const intervalId = setInterval(async () => {
+        if (V1Flag === 1) {
+          console.log("V1Flag is set to 1. Writing CycleStartConfirm as true.");
+          await writeCycleStartConfirm(RFID, socket, true);
+        } else {
+          console.log("V1Flag is set to 0. Writing CycleStartConfirm as false.");
+          await writeCycleStartConfirm(RFID, socket, false);
+          clearInterval(intervalId);  // Stop the interval when the flag is 0
+        }
+      }, 1000);
+
+      // Simulate or perform the RFID processing
+      await processVision1Single(singleBarcode, tags, socket);
+
+      // After the processing is complete, set the flag to 0 and clear the interval
+      V1Flag = 0;
+      console.log("Processing complete, setting V1Flag to 0.");
+      clearInterval(intervalId);
     }
 
     // If OKStatus or NOKStatus is true, insert/update in clw_station_status table
     if (tags.vision1.OKStatus || tags.vision1.NOKStatus) {
       console.log('Status is true, proceeding to update clw_station_status for single module.');
       await processVision1Single(singleBarcode, tags, socket);
-      resetVariables();
+      resetVariables(); // Reset the variables when processing is complete
     }
   } catch (error) {
     console.error('Error handling RFID tags for single module:', error.message);
   }
 }
-
 // Function to process RFID tags and link to a multiple barcode 
 async function processRFIDTags(tags, socket) {
 
@@ -355,75 +367,76 @@ async function processRFIDTags(tags, socket) {
   console.log("today_date Vision1::", today_date);
 
   if (!tags.vision1 || !tags.vision1.RFID) {
-      console.error("No valid vision1 RFID received or vision1 is null/undefined.");
-      return; 
+    console.error("No valid vision1 RFID received or vision1 is null/undefined.");
+    return;
   }
   const RFID = tags.vision1.RFID;
   console.log("Processing RFID for multiple modules:", RFID);
 
   try {
-      const request = new sql.Request(mainPool);
+    const request = new sql.Request(mainPool);
 
-      // Combine both barcodes
-      let combinedBarcodes = `${scannedBarcode1},${scannedBarcode2}`;
+    // Combine both barcodes
+    let combinedBarcodes = `${scannedBarcode1},${scannedBarcode2}`;
 
-      // Check if RFID exists in the database and update
-      const selectQuery = `SELECT RFID, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`;
-      const result = await request.query(selectQuery);
+    // Check if RFID exists in the database and update
+    const selectQuery = `SELECT RFID, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`;
+    const result = await request.query(selectQuery);
 
-      if (result.recordset.length > 0) {
-          const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${combinedBarcodes}', v1_live_status = 1, date_time = '${today_date}' WHERE RFID = '${RFID}'`;
-          await request.query(updateQuery);
-          console.log(`Updated RFID: ${RFID} with barcodes: ${combinedBarcodes}`);
+    if (result.recordset.length > 0) {
+      const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${combinedBarcodes}', v1_live_status = 1, date_time = '${today_date}' WHERE RFID = '${RFID}'`;
+      await request.query(updateQuery);
+      console.log(`Updated RFID: ${RFID} with barcodes: ${combinedBarcodes}`);
+    } else {
+      const insertQuery = `INSERT INTO [replus_treceability].[dbo].[linking_module_RFID] (RFID, module_barcode, v1_live_status, date_time) VALUES ('${RFID}', '${combinedBarcodes}', 1, '${today_date}')`;
+      await request.query(insertQuery);
+      console.log(`Inserted new record for RFID: ${RFID} with barcodes: ${combinedBarcodes}`);
+    }
+
+    // Send success message to frontend for linking
+    broadcast({ message: 'Module Barcode and RFID linked successfully' });
+    console.log("Module Barcode and RFID linked successfully!");
+
+    let V1Flag = 1; // Set the flag to 1 after the module and RFID are linked
+
+    // Start the interval to check the flag every second and write CycleStartConfirm 
+    const intervalId = setInterval(async () => {
+      if (V1Flag === 1) {
+        console.log("V1Flag is set to 1. Writing CycleStartConfirm as true.");
+        await writeCycleStartConfirm(RFID, socket, true);
       } else {
-          const insertQuery = `INSERT INTO [replus_treceability].[dbo].[linking_module_RFID] (RFID, module_barcode, v1_live_status, date_time) VALUES ('${RFID}', '${combinedBarcodes}', 1, '${today_date}')`;
-          await request.query(insertQuery);
-          console.log(`Inserted new record for RFID: ${RFID} with barcodes: ${combinedBarcodes}`);
+        console.log("V1Flag is set to 0. Writing CycleStartConfirm as false.");
+        await writeCycleStartConfirm(RFID, socket, false);
+        clearInterval(intervalId);  // Stop the interval when the flag is 0
       }
+    }, 1000);
 
-      // Set CycleStartConfirm to true after successful insert/update
-      // if (tags.vision1) {
-      //     tags.vision1.CycleStartConfirm = true;
-      //     console.log("CycleStartConfirm tag set to true!");
-      // }
+    // Perform the RFID processing
+    await processVision1(scannedBarcode1, scannedBarcode2, tags, socket);
 
-      // Send message to frontend
-      // socket.write(JSON.stringify({ message: 'Multiple barcodes and RFID linked successfully!' }));
-      broadcast({ message: 'Module Barcode and RFID linked successfully'});
-      console.log("Module Barcode and RFID linked successfully");
+    // After the processing is complete, set the flag to 0 and clear the interval
+    V1Flag = 0;
+    console.log("Processing complete, setting V1Flag to 0.");
+    clearInterval(intervalId);
 
-       // Write the CycleStartConfirm tag to the client-side PLC and notify client
-      // After successful barcode processing, set to true
-      await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
-
-      // Notify the client that the CycleStartConfirm tag has been set
-      const statusChangeMessage = {
-        tag: 'CycleStartConfirm',
-        RFID: RFID,
-        status: 'changed to true'
-      };
-      socket.write(JSON.stringify(statusChangeMessage));
-    // }   
-  
   } catch (error) {
-      console.error('Error processing RFID tags for multiple modules:', error.message);
+    console.error('Error processing RFID tags for multiple modules:', error.message);
   }
 
   if (tags.vision1.OKStatus || tags.vision1.NOKStatus) {
-      console.log('Status is true, proceeding to update clw_station_status for multiple module.');
-      try {
-          await processVision1(scannedBarcode1, scannedBarcode2, tags, socket);
-      } catch (err) {
-          console.error('Error during Vision1 processing:', err);
-      } finally {
-          resetVariables(); // Ensure the barcodes are always reset
-      }
-      // Reset tags only after everything is processed
-      tags = null;
-      console.log("RFID tags have been reset.");
+    console.log('Status is true, proceeding to update clw_station_status for multiple module.');
+    try {
+      await processVision1(scannedBarcode1, scannedBarcode2, tags, socket);
+    } catch (err) {
+      console.error('Error during Vision1 processing:', err);
+    } finally {
+      resetVariables(); // Ensure the barcodes are always reset
+    }
+    // Reset tags only after everything is processed
+    tags = null;
+    console.log("RFID tags have been reset.");
   }
 }
-
 // Function to send to write CycleStartConfirm
 // async function writeCycleStartConfirm(RFID, socket) {
 //   try {
