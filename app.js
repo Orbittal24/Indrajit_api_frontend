@@ -45,7 +45,7 @@ function formatDateTime(dateTime) {
 
 
 // Global Variables
-var scannedBarcode1 = "24S01P_260824_M00048";
+var scannedBarcode1 = "";
 var scannedBarcode2 = "";
 var tags = null;
 var previousTags = null;
