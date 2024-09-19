@@ -50,10 +50,7 @@ var scannedBarcode2 = "";
 var tags = null;
 var previousTags = null;
 var lastProcessedRFID = null;
-var V1Flag = 1;
-var V2Flag = 1;
-var WeldingFlag = 1;
-var FPCBFlag = 1;
+
 
 // Create a server to listen on port 7080
 const server = net.createServer(async (socket) => {
@@ -88,20 +85,20 @@ const server = net.createServer(async (socket) => {
     
             // Processing for Vision 2
             if (tags.vision2 && tags.vision2.RFID) {
-              await processVision2(tags, socket); // Process RFID for Vision 2
+              await processVision2(tags, socket); 
             } else {
               console.log('No Vision 2 tags received.');
             }
   
             // Processing for Welding
             if (tags.welding && tags.welding.RFID) {
-              await processWelding(tags, socket); // Process RFID for Welding
+              await processWelding(tags, socket); 
             } else {
               console.log('No Welding tags received.');
             }
   
             if (tags.fpcb && tags.fpcb.RFID) {
-              await processFpcb(tags, socket); // Process RFID for Fpcb
+              await processFpcb(tags, socket); 
             } else {
               console.log('No Fpcb tags received.');
             }
@@ -128,13 +125,13 @@ const server = net.createServer(async (socket) => {
             console.log(`API Response: ${message}`);
   
             // Send the API response to the frontend
-            // socket.write(JSON.stringify({ message }));
             broadcast({ message: 'Barcode Scanned', barcode });
   
             // If the module is complete, proceed with further processing
             if (message === 'Module complete in cell sorting.') {
+              broadcast({ message: 'Module complete in cell sorting!', barcode });
+              
               const module_code = barcode.split('_')[0];
-  
               const request = new sql.Request(mainPool);
               const result = await request.input('module_code', sql.VarChar, module_code).query(`SELECT no_of_modules FROM vision_pack_master WHERE module_code = '${module_code}'`);
   
@@ -148,8 +145,6 @@ const server = net.createServer(async (socket) => {
                 // Process RFID tags if already received
                 if (tags && tags.vision1) {
                   await processRFIDTagsSingle(tags, socket);
-                  // Now processing is complete, send CycleStartConfirm
-                  // await writeCycleStartConfirm(tags.vision1.RFID, socket);
                 } else {
                   console.log('Waiting for RFID tags...');
                 }
@@ -161,9 +156,7 @@ const server = net.createServer(async (socket) => {
                 if (scannedBarcode1 && scannedBarcode2) {
                   // Process RFID tags for multiple barcodes only when both are scanned
                   await processRFIDTags(tags, socket);
-                  // Now processing is complete, send CycleStartConfirm
-                  // await writeCycleStartConfirm(tags.vision1.RFID, socket);
-
+                  
                 } else if (scannedBarcode1 && !scannedBarcode2) {
                   console.log('1st barcode scanned, waiting for the 2nd one.');
                 }
@@ -189,10 +182,10 @@ const server = net.createServer(async (socket) => {
       console.error('Error processing data:', error.message);
     }
   }); 
-
 });
 
 let scannedBarcodes = [];
+
 // Function to handle the scanning of barcodes
 function handleBarcodeScan(barcode) {
   // If we already have 2 barcodes, do not add more
@@ -213,7 +206,6 @@ async function singlemodule(barcode, socket) {
     console.log('Single module barcode scanned successfully:', scannedBarcode1);
 
     if (socket && socket.write) {
-      // socket.write(JSON.stringify({ message: 'Module Barcode Scanned Successfully!' }));
       broadcast({ message: 'Module Barcode Scanned Successfully!'});
       console.log("Module Barcode Scanned Successfully!");
       
@@ -253,17 +245,19 @@ async function multiplemodule(barcode, socket) {
   if (!scannedBarcode1) {
     scannedBarcode1 = barcode;
     console.log('1st module barcode scanned successfully:', scannedBarcode1);
+     // Send a message to frontend, 2nd module barcode successfully scanned
+    broadcast({ message: '1st Module Barcode Scanned Successfully!', barcode });
+    
   } else if (!scannedBarcode2 && barcode !== scannedBarcode1) {
     scannedBarcode2 = barcode;
     console.log('2nd module barcode scanned successfully:', scannedBarcode2);
 
-    // Send a message to the frontend indicating both module barcodes have been successfully scanned
-    // socket.write(JSON.stringify({ message: 'Both module barcodes scanned successfully.' }));
-    broadcast({ message: 'Module Barcode Scanned Successfully!', barcode });
+    // Send a message to frontend, 2nd module barcode successfully scanned
+    broadcast({ message: '2nd Module Barcode Scanned Successfully!', barcode });
 
-    // Now we wait for tags to proceed
+    // wait for tags to proceed
     if (tags) {
-      await processRFIDTags(tags, socket); // If tags are already received, process them
+      await processRFIDTags(tags, socket); 
     } else {
       console.log('Waiting for RFID tags...');
     }
@@ -280,7 +274,7 @@ async function processRFIDTagsSingle(tags, socket) {
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
-  console.log("today_date Vision1::", today_date);
+  // console.log("today_date Vision1::", today_date);
 
   if (!tags.vision1 || !tags.vision1.RFID) {
     console.error("No valid vision1 RFID received or vision1 is null/undefined.");
@@ -319,21 +313,11 @@ async function processRFIDTagsSingle(tags, socket) {
       }
 
       // Send success message to frontend for linking
-      // socket.write(JSON.stringify({ message: 'Single barcode and RFID linked successfully!' }));
       broadcast({ message: 'Module Barcode and RFID linked successfully!'});
       console.log("Module Barcode and RFID linked successfully!");
       
-      // Write the CycleStartConfirm tag to true
-      await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
-
-      // Notify the client that the CycleStartConfirm tag has been set
-      // const statusChangeMessage = {
-      //   tag: 'CycleStartConfirm',
-      //   RFID: RFID,
-      //   status: 'changed to true',
-      //   station: 'vision1'
-      // };
-      // socket.write(JSON.stringify(statusChangeMessage));    
+      // Write the CycleStartConfirm tag to true for Vision1
+      await writeCycleStartConfirm(tags.vision1.RFID, socket, true); 
     }
 
     // If OKStatus or NOKStatus is true, insert/update in clw_station_status table
@@ -355,7 +339,7 @@ async function processRFIDTags(tags, socket) {
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
-  console.log("today_date Vision1::", today_date);
+  // console.log("today_date Vision1::", today_date);
 
   if (!tags.vision1 || !tags.vision1.RFID) {
       console.error("No valid vision1 RFID received or vision1 is null/undefined.");
@@ -384,22 +368,13 @@ async function processRFIDTags(tags, socket) {
           console.log(`Inserted new record for RFID: ${RFID} with barcodes: ${combinedBarcodes}`);
       }
 
-      // Set CycleStartConfirm to true after successful insert/update
-      // if (tags.vision1) {
-      //     tags.vision1.CycleStartConfirm = true;
-      //     console.log("CycleStartConfirm tag set to true!");
-      // }
-
       // Send message to frontend
-      // socket.write(JSON.stringify({ message: 'Multiple barcodes and RFID linked successfully!' }));
       broadcast({ message: 'Module Barcode and RFID linked successfully'});
       console.log("Module Barcode and RFID linked successfully");
 
-       // Write the CycleStartConfirm tag to the client-side PLC and notify client
-      // After successful barcode processing, set to true
+       // Write the CycleStartConfirm tag to true for Vision1
       await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
 
-      // Notify the client that the CycleStartConfirm tag has been set
       const statusChangeMessage = {tag: 'CycleStartConfirm', RFID: RFID, status: 'changed to true'};
       socket.write(JSON.stringify(statusChangeMessage));
     // }   
@@ -423,34 +398,18 @@ async function processRFIDTags(tags, socket) {
   }
 }
 
-// Function to send to write CycleStartConfirm
-// async function writeCycleStartConfirm(RFID, socket) {
-//   try {
-//       const payload = JSON.stringify({
-//           tag: 'CycleStartConfirm',
-//           value: true,
-//           RFID: RFID 
-//       });
 
-//       // Send payload to Hercules through the TCP socket
-//       socket.write(payload); 
-
-//       console.log(`Sent CycleStartConfirm set to true for RFID: ${RFID}`);
-//   } catch (error) {
-//       console.error('Error communicating with Hercules:', error.message);
-//   }
-// }
 async function writeCycleStartConfirm(RFID, socket, value) {
   try {
     const payload = JSON.stringify({
       tag: 'CycleStartConfirm',
-      value: value, // Dynamically send true or false
+      value: value, // send true or false
       RFID: RFID,
       station: 'vision1'
     });
 
     // Send payload to the client through the TCP socket
-    socket.write(payload); // Ensure this is being called
+    socket.write(payload); 
 
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
@@ -462,13 +421,13 @@ async function writeCycleStartConfirmvision2(RFID, socket, value) {
   try {
     const payload = JSON.stringify({
       tag: 'CycleStartConfirm',
-      value: value, // Dynamically send true or false
+      value: value, // send true or false
       RFID: RFID,
       station: 'vision2'
     });
 
     // Send payload to the client through the TCP socket
-    socket.write(payload); // Ensure this is being called
+    socket.write(payload); 
 
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
@@ -480,13 +439,13 @@ async function writeCycleStartConfirmwelding(RFID, socket, value) {
   try {
     const payload = JSON.stringify({
       tag: 'CycleStartConfirm',
-      value: value, // Dynamically send true or false
+      value: value, // send true or false
       RFID: RFID,
       station: 'welding'
     });
 
     // Send payload to the client through the TCP socket
-    socket.write(payload); // Ensure this is being called
+    socket.write(payload);
 
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
@@ -498,13 +457,13 @@ async function writeCycleStartConfirmfpcb(RFID, socket, value) {
   try {
     const payload = JSON.stringify({
       tag: 'CycleStartConfirm',
-      value: value, // Dynamically send true or false
+      value: value, // send true or false
       RFID: RFID,
       station: 'fpcb'
     });
 
     // Send payload to the client through the TCP socket
-    socket.write(payload); // Ensure this is being called
+    socket.write(payload); 
 
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
@@ -514,12 +473,13 @@ async function writeCycleStartConfirmfpcb(RFID, socket, value) {
 
 // Function to process Vision 1 for single module 
 async function processVision1Single(singleBarcode, tags, socket) {
+  
   const curdate = new Date();
   const yr = curdate.getFullYear();
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
-  console.log("today_date Vision1Single::", today_date);
+  // console.log("today_date Vision1Single::", today_date);
 
   console.log(`Processing Vision1 for single barcode: ${singleBarcode}`);
 
@@ -534,7 +494,7 @@ async function processVision1Single(singleBarcode, tags, socket) {
     const dateResult = await request.query(`SELECT date_time FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
-      const globalFormattedDateTime = formatDateTime(dbDate);
+      // const globalFormattedDateTime = formatDateTime(dbDate);
 
       // Query to check if the module already exists in clw_station_status
       const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${singleBarcode}'`;
@@ -558,11 +518,10 @@ async function processVision1Single(singleBarcode, tags, socket) {
         console.log(`Updated v1_live_status`);
       
       // Notify the frontend
-      // socket.write(JSON.stringify({ message: "Vision 1 Cycle Completed!" }));
       broadcast({ message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}` });
       console.log("Vision 1 Cycle Completed!");
 
-      // After completion, set to false
+      // processing is complete, send CycleStartConfirm to false for Vision1
       await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
 
     } else {
@@ -578,12 +537,12 @@ async function processVision1Single(singleBarcode, tags, socket) {
       if (combinedResult1.recordset.length > 0) {
         previous_v1_end_date = combinedResult1.recordset[0].v1_end_date;
       }
-      console.log("vision 1 datee ::", previous_v1_end_date);
+      // console.log("vision 1 datee ::", previous_v1_end_date);
 
       if (previous_v1_end_date != null) {
         globalFormattedDateTime1 = formatDateTime(previous_v1_end_date);
 
-        console.log("globalFormattedDateTime1::", globalFormattedDateTime1);
+        // console.log("globalFormattedDateTime1::", globalFormattedDateTime1);
 
         if (globalFormattedDateTime1) {
           await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET  v1_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${singleBarcode}'`);
@@ -615,7 +574,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
-  console.log("today_date Vision1::", today_date);
+  // console.log("today_date Vision1::", today_date);
 
   console.log(`Processing Vision1 for barcodes: ${scannedBarcode1}, ${scannedBarcode2}`);
 
@@ -636,7 +595,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
     const dateResult = await request.query(`SELECT date_time FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
-      const globalFormattedDateTime = formatDateTime(dbDate);
+      // const globalFormattedDateTime = formatDateTime(dbDate);
 
       for (const barcode of [scannedBarcode1, scannedBarcode2]) {
         // Check if the module already exists in `clw_station_status`
@@ -671,12 +630,11 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
         if (combinedResult1.recordset.length > 0) {
           previous_v1_end_date = combinedResult1.recordset[0].v1_end_date;
         }
-        console.log("vision 1 datee ::", previous_v1_end_date);
+        // console.log("vision 1 datee ::", previous_v1_end_date);
 
         if (previous_v1_end_date != null) {
           globalFormattedDateTime1 = formatDateTime(previous_v1_end_date);
-
-          console.log("globalFormattedDateTime1::", globalFormattedDateTime1);
+          // console.log("globalFormattedDateTime1::", globalFormattedDateTime1);
 
           if (globalFormattedDateTime1) {
             await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET  v1_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${barcode}'`);
@@ -696,11 +654,10 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
       }
 
       // Notify frontend 
-      // socket.write(JSON.stringify({ message: "Vision 1 Cycle Completed!" }));
       broadcast({ message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}` });
       console.log("Vision 1 Cycle Completed!");
 
-       // After completion, set to false
+       // processing is complete, send CycleStartConfirm to false for Vision2
        await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
 
       tags = null; 
@@ -731,7 +688,7 @@ async function processVision2(tags, socket) {
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
-  console.log("today_date Vision2::", today_date);
+  // console.log("today_date Vision2::", today_date);
 
   const RFID = tags.vision2.RFID;
   console.log("Processing RFID for Vision 2 :", RFID);
@@ -743,12 +700,11 @@ async function processVision2(tags, socket) {
     const dateResult = await request.query(`SELECT date_time FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
-      console.log("dbDate:::", dbDate);
-
+  
       const globalFormattedDateTime = formatDateTime(dbDate);
-      console.log("Global Formatted DateTime ::", globalFormattedDateTime);
+      // console.log("Global Formatted DateTime ::", globalFormattedDateTime);
 
-    // Check if RFID exists in the database from Vision 1
+    // Check if RFID exists in the database
     const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE RFID = '${RFID}'`;
     const result = await request.query(selectQuery);
 
@@ -758,7 +714,8 @@ async function processVision2(tags, socket) {
         const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v2_live_status = 1, date_time = GETDATE() WHERE RFID = '${RFID}'`;
         await request.query(updateLinkingQuery);
         console.log(`Updated v2_live_status for RFID: ${RFID}`);
-        // Now that processing is complete, send CycleStartConfirm
+        
+        // processing is complete, send CycleStartConfirm to true for Vision2
         await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
       }
 
@@ -779,11 +736,10 @@ async function processVision2(tags, socket) {
       
       // }     
         // Notify frontend
-        // socket.write(JSON.stringify({ message: 'Vision 2 Cycle Completed!' }));
         broadcast({ message: `Vision 2 Cycle Completed! Vision 2 Status: ${statusToStore}` });
         console.log("Vision 2 Cycle Completed!");
 
-        // After processing completes, set it back to false
+        // processing is complete, send CycleStartConfirm to false for Vision2
         await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
       }
     } else {
@@ -831,7 +787,7 @@ async function processWelding(tags, socket) {
           await request.query(updateLinkingQuery);
           console.log(`Updated welding_live_status for RFID: ${RFID}`);
 
-          // Now processing is complete, send CycleStartConfirm
+          // processing is complete, send CycleStartConfirm to true for Welding
           await writeCycleStartConfirmwelding(tags.welding.RFID, socket, true);
         }
 
@@ -847,15 +803,13 @@ async function processWelding(tags, socket) {
         // update the `v1_live_status` in `linking_module_RFID`
         const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET welding_live_status = '0'`;
         await request.query(updateLinkingQuery);
-        console.log(`Updated welding_live_status`)
-        
+        console.log(`Updated welding_live_status`)       
         // }
           // Notify frontend
-          // socket.write(JSON.stringify({ message: `Welding Cycle Completed! Welding Status: ${statusToStore}` }));
           broadcast({ message: `Welding Cycle Completed! Welding Status: ${statusToStore}` });
           console.log("Welding Cycle Completed!");
 
-          // After processing completes, set it back to false
+          // processing is complete, send CycleStartConfirm to false for Welding
           await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
         }
 
@@ -878,7 +832,7 @@ async function processFpcb(tags, socket) {
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
-  console.log("today_date FPCB::", today_date);
+  // console.log("today_date FPCB::", today_date);
 
   const RFID = tags.fpcb.RFID;
   console.log("Processing FPCB for RFID:", RFID);
@@ -891,7 +845,7 @@ async function processFpcb(tags, socket) {
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
       const globalFormattedDateTime = formatDateTime(dbDate);
-      console.log("Global Formatted DateTime for FPCB::", globalFormattedDateTime);
+      // console.log("Global Formatted DateTime for FPCB::", globalFormattedDateTime);
 
       // Check if RFID exists in the database
       const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE RFID = '${RFID}'`;
@@ -904,16 +858,14 @@ async function processFpcb(tags, socket) {
           await request.query(updateLinkingQuery);
           console.log(`Updated fpcb_live_status for RFID: ${RFID}`);
 
-          // When processing starts, set it to true
-        await writeCycleStartConfirmfpcb(tags.fpcb, socket, false);
-
+          // processing is complete, send CycleStartConfirm to true for FPCB
+          await writeCycleStartConfirmfpcb(tags.fpcb, socket, true);
         }
 
         // Update FPCB status when either OKStatus or NOKStatus is true
         if (tags.fpcb.OKStatus || tags.fpcb.NOKStatus) {
           const statusToStore = tags.fpcb.OKStatus ? "OK" : "NOT OK";
           const fpcbError = tags.fpcb.ERRORStatus;
-
           const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${statusToStore}', fpcb_error = '${fpcbError}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}' WHERE RFID = '${RFID}'`;
 
           await request.query(updateClwStationQuery);
@@ -923,14 +875,13 @@ async function processFpcb(tags, socket) {
         const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET fpcb_live_status = '0'`;
         await request.query(updateLinkingQuery);
         console.log(`Updated fpcb_live_status for barcode: ${barcode}`)
-
-        // After processing completes, set it back to false
-        await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, true);
       // }
         // Notify frontend
-        // socket.write(JSON.stringify({ message: `FPCB Cycle Completed! FPCB Status: ${statusToStore}` }));
         broadcast({ message: `FPCB Cycle Completed! FPCB Status: ${statusToStore}` });
         console.log("FPCB Cycle Completed!");
+
+        // processing is complete, send CycleStartConfirm to false for FPCB
+        await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
       }
 
       } else {
