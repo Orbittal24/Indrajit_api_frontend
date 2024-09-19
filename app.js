@@ -154,7 +154,6 @@ const server = net.createServer(async (socket) => {
   
                 // Process RFID tags if both barcodes are scanned
                 if (scannedBarcode1 && scannedBarcode2) {
-                  // Process RFID tags for multiple barcodes only when both are scanned
                   await processRFIDTags(tags, socket);
                   
                 } else if (scannedBarcode1 && !scannedBarcode2) {
@@ -202,7 +201,7 @@ async function singlemodule(barcode, socket) {
 
   // Check if the barcode is already scanned, if not, set it as the scanned barcode
   if (!scannedBarcode1) {
-    scannedBarcode1 = barcode;  // Store the scanned barcode
+    scannedBarcode1 = barcode; 
     console.log('Single module barcode scanned successfully:', scannedBarcode1);
 
     if (socket && socket.write) {
