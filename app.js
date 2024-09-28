@@ -291,14 +291,15 @@ async function processRFIDTagsSingle(tags, socket) {
 
     // Use scannedBarcode1 for single-module processing
     let singleBarcode = scannedBarcode1;
+    console.log("singleBarcode found processRFIDSingle::", singleBarcode)
 
-    if (!singleBarcode) {
-      console.error('Scanned barcode is undefined. Unable to link RFID.');
-      return;
-    }
+    // if (!singleBarcode) {
+    //   console.error('Scanned barcode is undefined. Unable to link RFID.');
+    //   return;
+    // }
 
     // Insert/update in linking_module_RFID table when status is false
-    if (!tags.vision1.OKStatus && !tags.vision1.NOKStatus) {
+    if (!tags.vision1.OKStatus || tags.vision1.NOKStatus) {
       // RFID exists, update with the single barcode if necessary
       if (result.recordset.length > 0) {
         const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${singleBarcode}', v1_live_status = 1 WHERE RFID = '${RFID}'`;
