@@ -118,7 +118,7 @@ const server = net.createServer(async (socket) => {
             const apiUrl = 'http://10.5.0.20:4000/checkBarcode';
   
             const response = await axios.post(apiUrl, {
-              scannedBarcode: barcode,
+              scannedBarcode: '24S01P_240924_M00072',
             });
   
             const message = response.data.message;
