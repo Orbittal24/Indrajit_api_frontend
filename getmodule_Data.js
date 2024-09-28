@@ -45,6 +45,7 @@ app.post("/checkBarcode", async (req, res) => {
   try {   
     // Query to get the count of modules for the extracted module code
     const moduleCountQuery = `SELECT COUNT(*) AS count FROM voltage_ir_admin WHERE ModuleCode = '${moduleCode}'`;
+   console.log("moduleCountQuery", moduleCountQuery);
 
     const moduleCountResult = await queryDatabase(moduleCountQuery);
     const moduleCount = moduleCountResult.recordset[0].count;
@@ -53,13 +54,13 @@ app.post("/checkBarcode", async (req, res) => {
       // Query to check if the same number of entries exist in cell_sorting_backup
       // const cellSortingQuery = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode LIKE '${moduleCode}%'`;
 
-           const cellSortingQuery = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode = '${scannedBarcode}'`;
-     
+      const cellSortingQuery = `SELECT COUNT(*) AS count FROM cell_sorting_backup WHERE ModuleCode = '${scannedBarcode}'`;
+     console.log("cellSortingQuery", cellSortingQuery);
       const cellSortingResult = await queryDatabase(cellSortingQuery);
 
       const cellSortingCount = cellSortingResult.recordset[0].count;
-
-      if (cellSortingCount === moduleCount) {
+console.log("cellSortingCount", cellSortingCount);
+      if (cellSortingCount == moduleCount) {
         res.status(200).json({
           message: "Module complete in cell sorting.",
           moduleCode,
