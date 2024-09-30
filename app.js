@@ -299,7 +299,7 @@ async function processRFIDTagsSingle(tags, socket) {
     // }
 
     // Insert/update in linking_module_RFID table when status is false
-    if (tags.vision1.OKStatus || tags.vision1.NOKStatus) {
+    if (!tags.vision1.OKStatus || !tags.vision1.NOKStatus) {
       // RFID exists, update with the single barcode if necessary
       if (result.recordset.length > 0) {
         const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${singleBarcode}', v1_live_status = 1 WHERE RFID = '${RFID}'`;
@@ -521,12 +521,7 @@ async function processVision1Single(singleBarcode, tags, socket) {
       broadcast({ message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}` });
       console.log("Vision 1 Cycle Completed!");
 
-      // processing is complete, send CycleStartConfirm to false for Vision1
-      await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
-
-    } else {
-      console.error(`No record found for RFID: ${RFID}`);
-    }
+     
 
      /******************** indrajeet code start **************************/
      const combinedResult1 = await mainPool.request().query(`
@@ -560,6 +555,13 @@ async function processVision1Single(singleBarcode, tags, socket) {
         console.log(`No previous record found for module_barcode: ${singleBarcode}`);
       }
     /******************** indrajeet code end **************************/
+
+       // processing is complete, send CycleStartConfirm to false for Vision1
+      await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
+
+    } else {
+      console.error(`No record found for RFID: ${RFID}`);
+    }
 
   } catch (error) {
     console.error('Error processing Vision1 for single module:', error.message);
