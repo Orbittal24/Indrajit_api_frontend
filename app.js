@@ -859,7 +859,7 @@ async function processFpcb(tags, socket) {
           console.log(`Updated fpcb_live_status for RFID: ${RFID}`);
 
           // processing is complete, send CycleStartConfirm to true for FPCB
-          await writeCycleStartConfirmfpcb(tags.fpcb, socket, true);
+          await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, true);
         }
 
         // Update FPCB status when either OKStatus or NOKStatus is true
