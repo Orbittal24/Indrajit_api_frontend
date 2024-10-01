@@ -1038,6 +1038,7 @@ async function processVision2(tags, socket) {
           // Both OKStatus and NOKStatus are false, update v2_live_status
           if (!tags.vision2.OKStatus && !tags.vision2.NOKStatus) {
             const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v2_live_status = 1, date_time = GETDATE() WHERE module_barcode = '${moduleBarcode}'`;
+            console.log("updateLinkingQueryyyy:::", updateLinkingQuery);
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status for RFID: ${RFID}`);
 
