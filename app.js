@@ -547,7 +547,7 @@ async function writeCycleStartConfirm(RFID, socket, value) {
 
     // Send payload to the client through the TCP socket
     socket.write(payload); 
-
+    console.log("payload_VISION1......": payload)
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
     console.error('Error communicating with client:', error.message);
@@ -565,7 +565,7 @@ async function writeCycleStartConfirmvision2(RFID, socket, value) {
 
     // Send payload to the client through the TCP socket
     socket.write(payload); 
-
+    console.log("payload_VISION2......": payload)
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
     console.error('Error communicating with client:', error.message);
@@ -583,7 +583,7 @@ async function writeCycleStartConfirmwelding(RFID, socket, value) {
 
     // Send payload to the client through the TCP socket
     socket.write(payload);
-
+   console.log("payload_WELDING......": payload)
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
     console.error('Error communicating with client:', error.message);
@@ -601,7 +601,7 @@ async function writeCycleStartConfirmfpcb(RFID, socket, value) {
 
     // Send payload to the client through the TCP socket
     socket.write(payload); 
-
+    console.log("payload_FPCB......": payload)
     console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
   } catch (error) {
     console.error('Error communicating with client:', error.message);
