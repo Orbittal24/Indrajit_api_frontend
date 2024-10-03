@@ -666,7 +666,7 @@ async function processRFIDTags(tags, socket) {
 async function writeCycleStartConfirm(RFID, socket, value) {
   try {
     const payload = JSON.stringify({
-      tag: 'CycleStartConfirm',
+      tag: 'V1_CycleStartConfirm',
       value: value, // send true or false
       RFID: RFID,
       station: 'vision1'
@@ -684,7 +684,7 @@ async function writeCycleStartConfirm(RFID, socket, value) {
 async function writeCycleStartConfirmvision2(RFID, socket, value) {
   try {
     const payload = JSON.stringify({
-      tag: 'CycleStartConfirm',
+      tag: 'V2_CycleStartConfirm',
       value: value, // send true or false
       RFID: RFID,
       station: 'vision2'
@@ -702,7 +702,7 @@ async function writeCycleStartConfirmvision2(RFID, socket, value) {
 async function writeCycleStartConfirmwelding(RFID, socket, value) {
   try {
     const payload = JSON.stringify({
-      tag: 'CycleStartConfirm',
+      tag: 'Wel_CycleStartConfirm',
       value: value, // send true or false
       RFID: RFID,
       station: 'welding'
@@ -720,7 +720,7 @@ async function writeCycleStartConfirmwelding(RFID, socket, value) {
 async function writeCycleStartConfirmfpcb(RFID, socket, value) {
   try {
     const payload = JSON.stringify({
-      tag: 'CycleStartConfirm',
+      tag: 'fpcb_CycleStartConfirm',
       value: value, // send true or false
       RFID: RFID,
       station: 'fpcb'
