@@ -59,17 +59,20 @@ const ECommerce: React.FC = () => {
     //   });
     // };
 
-    ws.onmessage = (event) => {
+      ws.onmessage = (event) => {
       const messageData = JSON.parse(event.data);
-    
+      
       // Check if it's an error based on the `type` field sent from the backend
       const isError = messageData.type === 'error';
+    
+      // Split the message into lines and define the type for 'line'
+      const messageLines = messageData.message.split('\n').map((line: string) => `<strong>${line}</strong>`).join('<br>');
     
       if (isError) {
         // Display error popup
         Swal.fire({
           title: "<strong style='color:red'>Error</strong>", // Bold and red "Error"
-          html: `<p style="color:red">${messageData.message}</p>`, // Normal error message
+          html: `<p style="color:red">${messageLines}</p>`, // Bold message lines
           icon: 'error',
           timer: 10000,  // Longer duration for error messages
           showConfirmButton: false,
@@ -78,14 +81,14 @@ const ECommerce: React.FC = () => {
         // Display success popup
         Swal.fire({
           title: "Success",
-          html: `<p>${messageData.message}</p>`,
+          html: `<p style="color:red">${messageLines}</p>`, // Bold message lines
           icon: 'success',
           timer: 3000,  // Shorter duration for success messages
           showConfirmButton: false,
         });
       }
     };
-
+    
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
