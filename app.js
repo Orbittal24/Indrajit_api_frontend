@@ -548,7 +548,7 @@ async function writeCycleStartConfirm(RFID, socket, value) {
     // Send payload to the client through the TCP socket
     socket.write(payload); 
     console.log("payload_VISION1......", payload)
-    console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
+    console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID} IN VISION1`);
   } catch (error) {
     console.error('Error communicating with client:', error.message);
   }
@@ -566,7 +566,7 @@ async function writeCycleStartConfirmvision2(RFID, socket, value) {
     // Send payload to the client through the TCP socket
     socket.write(payload); 
     console.log("payload_VISION2......", payload)
-    console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
+    console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID} IN VISION2`);
   } catch (error) {
     console.error('Error communicating with client:', error.message);
   }
@@ -584,7 +584,7 @@ async function writeCycleStartConfirmwelding(RFID, socket, value) {
     // Send payload to the client through the TCP socket
     socket.write(payload);
    console.log("payload_WELDING......", payload)
-    console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
+    console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID} IN WELDING`);
   } catch (error) {
     console.error('Error communicating with client:', error.message);
   }
@@ -602,7 +602,7 @@ async function writeCycleStartConfirmfpcb(RFID, socket, value) {
     // Send payload to the client through the TCP socket
     socket.write(payload); 
     console.log("payload_FPCB......", payload)
-    console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID}`);
+    console.log(`Sent CycleStartConfirm set to ${value} for RFID: ${RFID} IN FPCB `);
   } catch (error) {
     console.error('Error communicating with client:', error.message);
   }
@@ -626,12 +626,27 @@ async function processVision1Single(singleBarcode, tags, socket) {
     const RFID = tags.vision1.RFID;
     const statusToStore = tags.vision1.OKStatus ? "OK" : tags.vision1.NOKStatus ? "NOT OK" : null;
     const v1error = tags.vision1.ERRORStatus;
+    let errorDescription = null;
+
+    // Check if NOKStatus is true for Vision 1
+    if (tags.vision1.NOKStatus) {
+      // Fetch the error description from vision1_errorcode_master before updating or inserting into clw_station_status
+      const errorQuery = await request.query(`SELECT DISTINCT error_description FROM [replus_treceability].[dbo].[vision1_errorcode_master] WHERE error_code = '${v1error}'`);
+      console.log("errorQuery", errorQuery);
+      
+      if (errorQuery.recordset.length > 0) {
+        errorDescription = errorQuery.recordset[0].error_description;
+        console.log("Error Description for Vision1:", errorDescription);
+      } else {
+        console.log(`No error description found for Vision 1 error code: ${v1error}`);
+      }
+    }
 
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
-      // const globalFormattedDateTime = formatDateTime(dbDate);
+      const globalFormattedDateTime = formatDateTime(dbDate);
 
       // Query to check if the module already exists in clw_station_status
       const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${singleBarcode}'`;
@@ -639,26 +654,21 @@ async function processVision1Single(singleBarcode, tags, socket) {
 
       if (statusResult.recordset.length > 0) {
         // Update the existing record
-        const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${v1error}', RFID = '${RFID}', v1_start_date = '${today_date}', v1_end_date = '${today_date}' WHERE module_barcode = '${singleBarcode}'`;
+        const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${singleBarcode}'`;
         await request.query(updateQuery);
         console.log(`Updated Vision1 status for single module: ${singleBarcode}`);
       } else {
         // Insert a new record if the barcode doesn't exist
-        const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${singleBarcode}', '${statusToStore}', '${v1error}', '${RFID}', '${today_date}', '${today_date}')`;
+        const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${singleBarcode}', '${statusToStore}', '${errorDescription}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
         await request.query(insertQuery);
         console.log(`Inserted new Vision1 status for single module: ${singleBarcode}`);
       }
         // update the `v1_live_status` in `linking_module_RFID`
         const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v1_live_status = '0' WHERE module_barcode = '${singleBarcode}'`;
         console.log("updateLinkingQuery::", updateLinkingQuery)
+      
         await request.query(updateLinkingQuery);       
         console.log(`Updated v1_live_status`);
-      
-      // Notify the frontend
-      broadcast({ message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}` });
-      console.log("Vision 1 Cycle Completed!");
-
-     
 
      /******************** indrajeet code start **************************/
      const combinedResult1 = await mainPool.request().query(`
@@ -693,6 +703,19 @@ async function processVision1Single(singleBarcode, tags, socket) {
       }
     /******************** indrajeet code end **************************/
 
+      // Notify the frontend
+      if (tags.vision1.NOKStatus && errorDescription) {
+        broadcast({
+          message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}. Error: ${errorDescription}`
+        });
+      } else {
+        broadcast({
+          message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}`
+        });
+      }
+      console.log("Vision 1 Cycle Completed!");
+
+     
        // processing is complete, send CycleStartConfirm to false for Vision1
       await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
 
@@ -834,6 +857,19 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
     const RFID = tags.vision1.RFID;
     const statusToStore = tags.vision1.OKStatus ? "OK" : tags.vision1.NOKStatus ? "NOT OK" : null;
     const v1error = tags.vision1.ERRORStatus;
+    let errorDescription = null;
+
+    // Check if NOKStatus is true for Vision 1
+    if (tags.vision1.NOKStatus) {
+      // Fetch the error description from vision1_errorcode_master
+      const errorQuery = await request.query(`SELECT DISTINCT error_description FROM [replus_treceability].[dbo].[vision1_errorcode_master] WHERE error_code = '${v1error}'`);
+      if (errorQuery.recordset.length > 0) {
+        errorDescription = errorQuery.recordset[0].error_description;
+        console.log("Error Description for Vision1:", errorDescription);
+      } else {
+        console.log(`No error description found for Vision 1 error code: ${v1error}`);
+      }
+    }
 
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
@@ -848,12 +884,12 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
 
         if (statusResult.recordset.length > 0) {
           // Update the existing record
-          const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${v1error}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${combinedBarcodes}'`;
+          const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${combinedBarcodes}'`;
           await request.query(updateQuery);
           console.log(`Updated clw_station_status for barcode: ${combinedBarcodes}`);
         } else {
           // Insert a new record if it doesn't exist
-          const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${barcode}', '${statusToStore}', '${v1error}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
+          const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${barcode}', '${statusToStore}', '${errorDescription}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
           await request.query(insertQuery);
           console.log(`Inserted new clw_station_status record for barcode: ${combinedBarcodes}`);
         
@@ -898,8 +934,12 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
       /******************** indrajeet code end **************************/     
       }
 
-      // Notify frontend 
-      broadcast({ message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}` });
+      // Notify frontend with status and error if applicable
+      if (tags.vision1.NOKStatus && errorDescription) {
+        broadcast({ message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}. Error: ${errorDescription}` });
+      } else {
+        broadcast({ message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}` });
+      }
       console.log("Vision 1 Cycle Completed!");
 
        // After completing Vision1 cycle, set to false
@@ -1012,6 +1052,7 @@ async function processVision2(tags, socket) {
 
   try {
     const request = new sql.Request(mainPool);
+    let errorDescription = null;
 
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
@@ -1051,7 +1092,20 @@ async function processVision2(tags, socket) {
             const statusToStore = tags.vision2.OKStatus ? "OK" : "NOT OK";
             const v2Error = tags.vision2.ERRORStatus;
 
-            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${statusToStore}', v2_error = '${v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
+
+            /******************** Add Error Lookup ************************/
+            if (tags.vision2.NOKStatus) {
+              const errorQuery = await request.query(`SELECT DISTINCT error_description FROM [replus_treceability].[dbo].[vision2_errorcode_master] WHERE error_code = '${v2Error}'`);
+              if (errorQuery.recordset.length > 0) {
+                errorDescription = errorQuery.recordset[0].error_description;
+                console.log("Error Description for Vision2:", errorDescription);
+              } else {
+                console.log(`No error description found for Vision 2 error code: ${v2Error}`);
+              }
+            }
+            /*************************************************************/
+
+            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${statusToStore}', v2_error = '${errorDescription}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
             await request.query(updateClwStationQuery);
             console.log(`Updated Vision 2 status for RFID: ${RFID}`);
             
@@ -1092,8 +1146,12 @@ async function processVision2(tags, socket) {
             }
             /******************** indrajeet code end **************************/
             
-            // Notify frontend
-            broadcast({ message: `Vision 2 Cycle Completed! Vision 2 Status: ${statusToStore}` });
+            // Notify frontend with status and error if applicable
+            if (tags.vision2.NOKStatus && errorDescription) {
+              broadcast({ message: `Vision 2 Cycle Completed! Vision 2 Status: ${statusToStore}. Error: ${errorDescription}` });
+            } else {
+              broadcast({ message: `Vision 2 Cycle Completed! Vision 2 Status: ${statusToStore}` });
+            }
             console.log("Vision 2 Cycle Completed!");
 
             // After completing Vision2 cycle, set it back to false
@@ -1198,7 +1256,8 @@ async function processWelding(tags, socket) {
 
   try {
     const request = new sql.Request(mainPool);
-
+    let errorDescription = null;
+    
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
     if (dateResult.recordset.length > 0) {
@@ -1234,7 +1293,20 @@ async function processWelding(tags, socket) {
             const statusToStore = tags.welding.OKStatus ? "OK" : "NOT OK";
             const weldingError = tags.welding.ERRORStatus;
 
-            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${statusToStore}', welding_error = '${weldingError}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
+
+            /******************** Add Error Lookup ************************/
+            if (tags.welding.NOKStatus) {
+              const errorQuery = await request.query(`SELECT DISTINCT error_description FROM [replus_treceability].[dbo].[welding_errorcode_master] WHERE error_code = '${weldingError}'`);
+              if (errorQuery.recordset.length > 0) {
+                errorDescription = errorQuery.recordset[0].error_description;
+                console.log("Error Description for Welding:", errorDescription);
+              } else {
+                console.log(`No error description found for Welding error code: ${weldingError}`);
+              }
+            }
+            /*************************************************************/
+
+            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${statusToStore}', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
             await request.query(updateClwStationQuery);
             console.log(`Updated Welding status for RFID: ${RFID}`);
 
@@ -1274,8 +1346,12 @@ async function processWelding(tags, socket) {
             }
             /******************** indrajeet code end **************************/
 
-            // Notify frontend
-            broadcast({ message: `Welding Cycle Completed! Welding Status: ${statusToStore}` });
+            // Notify frontend with status and error if applicable
+            if (tags.welding.NOKStatus && errorDescription) {
+              broadcast({ message: `Welding Cycle Completed! Welding Status: ${statusToStore}. Error: ${errorDescription}` });
+            } else {
+              broadcast({ message: `Welding Cycle Completed! Welding Status: ${statusToStore}` });
+            }
             console.log("Welding Cycle Completed!");
 
             // After processing completing, set it back to false
@@ -1377,7 +1453,8 @@ async function processFpcb(tags, socket) {
 
   try {
     const request = new sql.Request(mainPool);
-
+    let errorDescription = null;
+    
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
     if (dateResult.recordset.length > 0) {
@@ -1409,6 +1486,19 @@ async function processFpcb(tags, socket) {
           if (tags.fpcb.OKStatus || tags.fpcb.NOKStatus) {
             const statusToStore = tags.fpcb.OKStatus ? "OK" : "NOT OK";
             const fpcbError = tags.fpcb.ERRORStatus;
+
+            /******************** Add Error Lookup ************************/
+            if (tags.fpcb.NOKStatus) {
+              const errorQuery = await request.query(`SELECT DISTINCT error_description FROM [replus_treceability].[dbo].[fpcb_errorcode_master] WHERE error_code = '${fpcbError}'`);
+              if (errorQuery.recordset.length > 0) {
+                errorDescription = errorQuery.recordset[0].error_description;
+                console.log("Error Description for FPCB:", errorDescription);
+              } else {
+                console.log(`No error description found for FPCB error code: ${fpcbError}`);
+              }
+            }
+            /*************************************************************/
+            
             const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${statusToStore}', fpcb_error = '${fpcbError}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}' WHERE module_barcode = '${trimmedBarcode}'`;
 
             await request.query(updateClwStationQuery);
@@ -1449,8 +1539,12 @@ async function processFpcb(tags, socket) {
             }
             /******************** indrajeet code end **************************/
 
-            // Notify frontend
-            broadcast({ message: `FPCB Cycle Completed! FPCB Status: ${statusToStore}` });
+           // Notify frontend with status and error if applicable
+            if (tags.fpcb.NOKStatus && errorDescription) {
+              broadcast({ message: `FPCB Cycle Completed! FPCB Status: ${statusToStore}. Error: ${errorDescription}` });
+            } else {
+              broadcast({ message: `FPCB Cycle Completed! FPCB Status: ${statusToStore}` });
+            }
             console.log("FPCB Cycle Completed!");
 
             // After processing completes, set it back to false
