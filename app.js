@@ -694,7 +694,7 @@ async function processVision1Single(singleBarcode, tags, socket) {
         
       /******************** To send NOT OK Status in rework table ****************************/
       if (statusToStore === 'NOT OK') {
-        await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station) VALUES ('${singleBarcode}', 'Vision 1')`);
+        await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description) VALUES ('${singleBarcode}', 'Vision 1', '${errorDescription}')`);
         console.log("Data inserted into replus_NOTOK_history_details for Vision 1");
       }
 
@@ -925,7 +925,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
           
         /******************** To send NOT OK Status in rework table ****************************/
         if (statusToStore === 'NOT OK') {
-          await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station) VALUES ('${barcode}', 'Vision 1')`);
+          await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description) VALUES ('${barcode}', 'Vision 1', '${errorDescription}')`);
           console.log("Data inserted into replus_NOTOK_history_details for Vision 1");
         }
         } else {
@@ -1138,7 +1138,7 @@ async function processVision2(tags, socket) {
               
               /******************** To send NOT OK Status in rework table ****************************/
               if (statusToStore === 'NOT OK') {
-                await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station) VALUES ('${barcode.trim()}', 'Vision 2')`);
+                await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description) VALUES ('${barcode.trim()}', 'Vision 2', '${errorDescription}')`);
                 console.log("Data inserted into replus_NOTOK_history_details for Vision 2");
               }
             } else {
@@ -1338,7 +1338,7 @@ async function processWelding(tags, socket) {
 
               /******************** To send NOT OK Status in rework table ****************************/
               if (statusToStore === 'NOT OK') {
-                await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station) VALUES ('${barcode.trim()}', 'Welding')`);
+                await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description) VALUES ('${barcode.trim()}', 'Welding', '${errorDescription}')`);
                 console.log("Data inserted into replus_NOTOK_history_details for Welding");
               }
             } else {
@@ -1531,7 +1531,7 @@ async function processFpcb(tags, socket) {
 
               /******************** To send NOT OK Status in rework table ****************************/
               if (statusToStore === 'NOT OK') {
-                await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station) VALUES ('${trimmedBarcode}', 'FPCB')`);
+                await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description) VALUES ('${trimmedBarcode}', 'FPCB', '${errorDescription}')`);
                 console.log("Data inserted into replus_NOTOK_history_details for FPCB");
               }
             } else {
