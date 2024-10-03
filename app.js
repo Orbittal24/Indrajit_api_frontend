@@ -339,7 +339,7 @@ const server = net.createServer(async (socket) => {
             tags = jsonData;
   
             // Skip processing if vision1 RFID is 'DA'
-            if (tags.vision1 && tags.vision1.RFID === 'DA') {
+            if (tags.vision1 && tags.vision1.V1_RFID === 'DA') {
               console.log('RFID "DA" is not accepted. Skipping processing for Vision 1.');
             } else {
               // Process RFID for Vision 1 if valid (not 'DA')
@@ -347,21 +347,21 @@ const server = net.createServer(async (socket) => {
             }
   
             // Process Vision 2 (skip if RFID is 'DA')
-            if (tags.vision2 && tags.vision2.RFID !== 'DA') {
+            if (tags.vision2 && tags.vision2.V2_RFID !== 'DA') {
               await processVision2(tags, socket); // Process RFID for Vision 2
             } else {
               console.log('No valid Vision 2 RFID or RFID is "DA".');
             }
   
             // Process Welding (skip if RFID is 'DA')
-            if (tags.welding && tags.welding.RFID !== 'DA') {
+            if (tags.welding && tags.welding.Wel_RFID !== 'DA') {
               await processWelding(tags, socket); // Process RFID for Welding
             } else {
               console.log('No valid Welding RFID or RFID is "DA".');
             }
   
             // Process FPCB (skip if RFID is 'DA')
-            if (tags.fpcb && tags.fpcb.RFID !== 'DA') {
+            if (tags.fpcb && tags.fpcb.fpcb_RFID !== 'DA') {
               await processFpcb(tags, socket); // Process RFID for FPCB
             } else {
               console.log('No valid FPCB RFID or RFID is "DA".');
@@ -407,7 +407,7 @@ const server = net.createServer(async (socket) => {
                 await singlemodule(barcode, socket);
   
                 // Process RFID tags if already received and RFID is not 'DA'
-                if (tags && tags.vision1 && tags.vision1.RFID !== 'DA') {
+                if (tags && tags.vision1 && tags.vision1.V1_RFID !== 'DA') {
                   await processRFIDTagsSingle(tags, socket);
                 } else {
                   console.log('Waiting for valid RFID tags...');
@@ -417,7 +417,7 @@ const server = net.createServer(async (socket) => {
                 await multiplemodule(barcode, socket);
   
                 // Process RFID tags if both barcodes are scanned and RFID is not 'DA'
-                if (scannedBarcode1 && scannedBarcode2 && tags.vision1.RFID !== 'DA') {
+                if (scannedBarcode1 && scannedBarcode2 && tags.vision1.V1_RFID !== 'DA') {
                   await processRFIDTags(tags, socket);
                 } else if (scannedBarcode1 && !scannedBarcode2) {
                   console.log('1st barcode scanned, waiting for the 2nd one.');
