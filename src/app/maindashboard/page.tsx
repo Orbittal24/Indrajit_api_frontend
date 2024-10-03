@@ -200,74 +200,69 @@ const ECommerce: React.FC = () => {
 
 
 const fetchData = async () => {
-      try {
-        const response = await fetch("http://localhost:5501/api/CountAll");
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const result = await response.json();
-        const data = result.data[0];
-        const liveStatuses = result.liveStatuses;
-    
-        const shift = determineShift();
-        setCurrentShift(shift); // Set the current shift here
-    
-        let vision1, vision2, welding, fpcb, moduleBarcode1, moduleBarcode2, moduleBarcode3, moduleBarcode4;
-        if (shift === "A") {
-          vision1 = [data.v1_first_shift_ok, data.v1_first_shift_notok];
-          vision2 = [data.v2_first_shift_ok, data.v2_first_shift_notok];
-          welding = [data.welding_first_shift_ok, data.welding_first_shift_notok];
-          fpcb = [data.fpcb_first_shift_ok, data.fpcb_first_shift_notok];
-          moduleBarcode1 = liveStatuses.v1.join('\n');
-          moduleBarcode2 = liveStatuses.v2.join('\n');
-          moduleBarcode3 = liveStatuses.welding.join('\n');
-          moduleBarcode4 = liveStatuses.fpcb.join('\n');
-        } else if (shift === "B") {
-          vision1 = [data.v1_second_shift_ok, data.v1_second_shift_notok];
-          vision2 = [data.v2_second_shift_ok, data.v2_second_shift_notok];
-          welding = [data.welding_second_shift_ok, data.welding_second_shift_notok];
-          fpcb = [data.fpcb_second_shift_ok, data.fpcb_second_shift_notok];
-          moduleBarcode1 = liveStatuses.v1.join('\n');
-          moduleBarcode2 = liveStatuses.v2.join('\n');
-          moduleBarcode3 = liveStatuses.welding.join('\n');
-          moduleBarcode4 = liveStatuses.fpcb.join('\n');
-        } else {
-          vision1 = [data.v1_third_shift_ok, data.v1_third_shift_notok];
-          vision2 = [data.v2_third_shift_ok, data.v2_third_shift_notok];
-          welding = [data.welding_third_shift_ok, data.welding_third_shift_notok];
-          fpcb = [data.fpcb_third_shift_ok, data.fpcb_third_shift_notok];
-          moduleBarcode1 = liveStatuses.v1.join('\n');
-          moduleBarcode2 = liveStatuses.v2.join('\n');
-          moduleBarcode3 = liveStatuses.welding.join('\n');
-          moduleBarcode4 = liveStatuses.fpcb.join('\n');
-        }
-    
-        setVision1Series(vision1);
-        setVision2Series(vision2);
-        setWeldingSeries(welding);
-        setFpcbSeries(fpcb);
-        setModuleBarcode1(moduleBarcode1);
-        setModuleBarcode2(moduleBarcode2);
-        setModuleBarcode3(moduleBarcode3);
-        setModuleBarcode4(moduleBarcode4);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+    try {
+      const response = await fetch("http://localhost:5501/api/CountAll");
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
-    };
+      const result = await response.json();
+      const data = result.data[0];
+      const liveStatuses = result.liveStatuses;
 
-    
+      const shift = determineShift();
+      setCurrentShift(shift); // Set the current shift here
 
+      let vision1, vision2, welding, fpcb, moduleBarcode1, moduleBarcode2, moduleBarcode3, moduleBarcode4;
+      if (shift === "A") {
+        vision1 = [data.v1_first_shift_ok, data.v1_first_shift_notok];
+        vision2 = [data.v2_first_shift_ok, data.v2_first_shift_notok];
+        welding = [data.welding_first_shift_ok, data.welding_first_shift_notok];
+        fpcb = [data.fpcb_first_shift_ok, data.fpcb_first_shift_notok];
+        moduleBarcode1 = liveStatuses.v1.join('\n');
+        moduleBarcode2 = liveStatuses.v2.join('\n');
+        moduleBarcode3 = liveStatuses.welding.join('\n');
+        moduleBarcode4 = liveStatuses.fpcb.join('\n');
+      } else if (shift === "B") {
+        vision1 = [data.v1_second_shift_ok, data.v1_second_shift_notok];
+        vision2 = [data.v2_second_shift_ok, data.v2_second_shift_notok];
+        welding = [data.welding_second_shift_ok, data.welding_second_shift_notok];
+        fpcb = [data.fpcb_second_shift_ok, data.fpcb_second_shift_notok];
+        moduleBarcode1 = liveStatuses.v1.join('\n');
+        moduleBarcode2 = liveStatuses.v2.join('\n');
+        moduleBarcode3 = liveStatuses.welding.join('\n');
+        moduleBarcode4 = liveStatuses.fpcb.join('\n');
+      } else {
+        vision1 = [data.v1_third_shift_ok, data.v1_third_shift_notok];
+        vision2 = [data.v2_third_shift_ok, data.v2_third_shift_notok];
+        welding = [data.welding_third_shift_ok, data.welding_third_shift_notok];
+        fpcb = [data.fpcb_third_shift_ok, data.fpcb_third_shift_notok];
+        moduleBarcode1 = liveStatuses.v1.join('\n');
+        moduleBarcode2 = liveStatuses.v2.join('\n');
+        moduleBarcode3 = liveStatuses.welding.join('\n');
+        moduleBarcode4 = liveStatuses.fpcb.join('\n');
+      }
+
+      setVision1Series(vision1);
+      setVision2Series(vision2);
+      setWeldingSeries(welding);
+      setFpcbSeries(fpcb);
+      setModuleBarcode1(moduleBarcode1);
+      setModuleBarcode2(moduleBarcode2);
+      setModuleBarcode3(moduleBarcode3);
+      setModuleBarcode4(moduleBarcode4);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  fetchData();
+  const interval = setInterval(() => {
     fetchData();
-    const interval = setInterval(() => {
-      fetchData();
-    }, 2000); 
+  }, 2000); // Re-fetch every 2 seconds
 
-    return () => {
-      clearInterval(interval);
-      // ws.close();
-    };
-  }, []);
-
+  return () => {
+    clearInterval(interval);
+  };
   return (
     <>
       <Header1 sidebarOpen={undefined} setSidebarOpen={function (arg0: boolean): void {
