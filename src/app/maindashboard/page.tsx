@@ -119,7 +119,7 @@ const ECommerce: React.FC = () => {
    
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:5501/api/CountAll");
+        const response = await fetch("http://10.5.0.20:5501/api/CountAll");
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
