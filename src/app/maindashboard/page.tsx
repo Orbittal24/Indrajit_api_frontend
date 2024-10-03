@@ -40,12 +40,12 @@ const ECommerce: React.FC = () => {
 
   // WebSocket connection and popup logic
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:6090');  // Connect to backend WebSocket
+    const ws = new WebSocket('ws://10.5.0.20:6090');  // Connect to your backend WebSocket
 
     ws.onopen = () => {
       console.log('WebSocket connection established');
     };
-
+ 
     ws.onmessage = (event) => {
       const messageData = JSON.parse(event.data);
       
@@ -75,7 +75,7 @@ const ECommerce: React.FC = () => {
         });
       }
     };
-    
+      
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
@@ -90,7 +90,7 @@ const ECommerce: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:6090');
+    const ws = new WebSocket('ws://10.5.0.20:6090');
 
     ws.onopen = () => {
       console.log('WebSocket connection established');
@@ -110,6 +110,7 @@ const ECommerce: React.FC = () => {
         setModuleBarcode3(messageData.data.moduleBarcode3 || "");
         setModuleBarcode4(messageData.data.moduleBarcode4 || "");
       }
+
     };
 
     ws.onerror = (error) => {
@@ -117,6 +118,7 @@ const ECommerce: React.FC = () => {
     };
 
    
+
     const fetchData = async () => {
       try {
         const response = await fetch("http://10.5.0.20:5501/api/CountAll");
@@ -280,3 +282,4 @@ const ECommerce: React.FC = () => {
 };
 
 export default ECommerce;
+
