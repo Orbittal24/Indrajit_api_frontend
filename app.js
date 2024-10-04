@@ -1626,7 +1626,7 @@ async function processFpcb(tags, socket) {
             }
             /*************************************************************/
             
-            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${statusToStore}', fpcb_error = '${fpcbError}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}' WHERE module_barcode = '${trimmedBarcode}'`;
+            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${statusToStore}', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}' WHERE module_barcode = '${trimmedBarcode}'`;
 
             await request.query(updateClwStationQuery);
             console.log(`Updated FPCB status for RFID: ${RFID}`);
