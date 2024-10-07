@@ -40,7 +40,7 @@ const ECommerce: React.FC = () => {
 
   // WebSocket connection and popup logic
   useEffect(() => {
-    const ws = new WebSocket('ws://10.5.0.20:6090');  // Connect to your backend WebSocket
+    const ws = new WebSocket('ws://10.5.0.20:6090');  // Connect to backend WebSocket
 
     ws.onopen = () => {
       console.log('WebSocket connection established');
@@ -61,7 +61,7 @@ const ECommerce: React.FC = () => {
           title: "<strong style='color:red'>Error</strong>", // Bold and red "Error"
           html: `<p style="color:red">${messageLines}</p>`, // Bold message lines
           icon: 'error',
-          timer: 10000,  // Longer duration for error messages
+          timer: 5000,
           showConfirmButton: false,
         });
       } else {
@@ -70,7 +70,7 @@ const ECommerce: React.FC = () => {
           title: "Success",
           html: `<p style="color:red">${messageLines}</p>`, // Bold message lines
           icon: 'success',
-          timer: 3000,  // Shorter duration for success messages
+          timer: 5000, 
           showConfirmButton: false,
         });
       }
@@ -110,7 +110,6 @@ const ECommerce: React.FC = () => {
         setModuleBarcode3(messageData.data.moduleBarcode3 || "");
         setModuleBarcode4(messageData.data.moduleBarcode4 || "");
       }
-
     };
 
     ws.onerror = (error) => {
