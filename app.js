@@ -756,7 +756,7 @@ async function processVision1Single(singleBarcode, tags, socket) {
     let errorDescription = null;
 
     // Check if NOKStatus is true for Vision 1
-    if (tags.vision1.V1_NOKStatus) {
+    if (tags.vision1.NOKStatus) {
       // Fetch the error description from vision1_errorcode_master before updating or inserting into clw_station_status
       const errorQuery = await request.query(`SELECT DISTINCT error_description FROM [replus_treceability].[dbo].[vision1_errorcode_master] WHERE error_code = '${v1error}'`);
       console.log("errorQuery", errorQuery);
@@ -831,7 +831,7 @@ async function processVision1Single(singleBarcode, tags, socket) {
     /******************** indrajeet code end **************************/
 
       // Notify the frontend
-      if (tags.vision1.V1_NOKStatus && errorDescription) {
+      if (tags.vision1.NOKStatus && errorDescription) {
         broadcast({
           message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}. Error: ${errorDescription}`
         });
@@ -981,7 +981,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
       throw new Error("Vision 1 data is undefined");
     }
 
-    const RFID = tags.vision1.V1_RFID;
+    const RFID = tags.vision1.RFID;
     const statusToStore = tags.vision1.OKStatus ? "OK" : tags.vision1.NOKStatus ? "NOT OK" : null;
     const v1error = tags.vision1.ERRORStatus;
     let errorDescription = null;
@@ -1174,7 +1174,7 @@ async function processVision2(tags, socket) {
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
   // console.log("today_date Vision2::", today_date);
 
-  const RFID = tags.vision2.V2_RFID;
+  const RFID = tags.vision2.RFID;
   console.log("Processing RFID for Vision 2 :", RFID);
 
   try {
@@ -1182,7 +1182,7 @@ async function processVision2(tags, socket) {
     let errorDescription = null;
 
     // Get the date_time for the given RFID
-    const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
+    const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE = '${RFID}'`);
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
       const moduleBarcode = dateResult.recordset[0].module_barcode;
@@ -1289,7 +1289,7 @@ async function processVision2(tags, socket) {
         }
       }
     } else {
-      console.log(`No matching RFID found for Vision 2: ${RFID}`);
+      console.log(`No matching found for Vision 2: ${RFID}`);
     }
   } catch (error) {
     console.error('Error processing Vision 2 RFID:', error.message);
