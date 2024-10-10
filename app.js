@@ -217,21 +217,21 @@ const server = net.createServer(async (socket) => {
             }
   
             // Processing for Vision 2 (skip if RFID is 'DA')
-            if (tags.vision2 && tags.vision2.V2_RFID !== 'DA') {
+            if (tags.vision2 && tags.vision2.RFID !== 'DA') {
               await processVision2(tags, socket); // Process RFID for Vision 2
             } else {
               console.log('No Vision 2 tags received or RFID is "DA".');
             }
   
             // Processing for Welding (skip if RFID is 'DA')
-            if (tags.welding && tags.welding.Wel_RFID !== 'DA') {
+            if (tags.welding && tags.welding.RFID !== 'DA') {
               await processWelding(tags, socket); // Process RFID for Welding
             } else {
               console.log('No Welding tags received or RFID is "DA".');
             }
   
             // Processing for FPCB (skip if RFID is 'DA')
-            if (tags.fpcb && tags.fpcb.fpcb_RFID !== 'DA') {
+            if (tags.fpcb && tags.fpcb.RFID !== 'DA') {
               await processFpcb(tags, socket); // Process RFID for FPCB
             } else {
               console.log('No FPCB tags received or RFID is "DA".');
@@ -277,7 +277,7 @@ const server = net.createServer(async (socket) => {
                 await singlemodule(barcode, socket);
   
                 // Process RFID tags if already received and RFID is not 'DA'
-                if (tags && tags.vision1 && tags.vision1.V1_RFID !== 'DA') {
+                if (tags && tags.vision1 && tags.vision1.RFID !== 'DA') {
                   await processRFIDTagsSingle(tags, socket);
                   // Now processing is complete, send CycleStartConfirm
                   // await writeCycleStartConfirm(tags.vision1.RFID, socket);
@@ -289,7 +289,7 @@ const server = net.createServer(async (socket) => {
                 await multiplemodule(barcode, socket);
   
                 // Process RFID tags if both barcodes are scanned and RFID is not 'DA'
-                if (scannedBarcode1 && scannedBarcode2 && tags.vision1.V1_RFID !== 'DA') {
+                if (scannedBarcode1 && scannedBarcode2 && tags.vision1.RFID !== 'DA') {
                   await processRFIDTags(tags, socket);
                   // Now processing is complete, send CycleStartConfirm
                   // await writeCycleStartConfirm(tags.vision1.RFID, socket);
@@ -317,7 +317,8 @@ const server = net.createServer(async (socket) => {
     } catch (error) {
       console.error('Error processing data:', error.message);
     }
-  });
+ });
+
 //     socket.on('data', async (data) => {
 //     try {
 //       const receivedData = data.toString().trim(); // Convert buffer to string and trim whitespace
@@ -444,7 +445,6 @@ const server = net.createServer(async (socket) => {
 //       console.error('Error processing data:', error.message);
 //     }
 //   });
-  
 });
 
 let scannedBarcodes = [];
@@ -543,7 +543,7 @@ async function processRFIDTagsSingle(tags, socket) {
     console.error("No valid vision1 RFID received or vision1 is null/undefined.");
     return; 
   }
-  const RFID = tags.vision1.V1_RFID;
+  const RFID = tags.vision1.RFID;
   console.log("Processing RFID for single module:", RFID);
 
   try {
@@ -581,7 +581,7 @@ async function processRFIDTagsSingle(tags, socket) {
       console.log("Module Barcode and RFID linked successfully!");
       
       // Write the CycleStartConfirm tag to true for Vision1
-      await writeCycleStartConfirm(tags.vision1.V1_RFID, socket, true); 
+      await writeCycleStartConfirm(tags.vision1.RFID, socket, true); 
     }
 
     // If OKStatus or NOKStatus is true, insert/update in clw_station_status table
@@ -661,7 +661,6 @@ async function processRFIDTags(tags, socket) {
       console.log("RFID tags have been reset.");
   }
 }
-
 
 async function writeCycleStartConfirm(RFID, socket, value) {
   try {
@@ -960,7 +959,6 @@ async function processVision1Single(singleBarcode, tags, socket) {
 //     console.error("Error processing Vision1 data:", error.message);
 //   }
 // }
-
 async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
 
   const curdate = new Date();
@@ -987,7 +985,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
     let errorDescription = null;
 
     // Check if NOKStatus is true for Vision 1
-    if (tags.vision1.V1_NOKStatus) {
+    if (tags.vision1.NOKStatus) {
       // Fetch the error description from vision1_errorcode_master
       const errorQuery = await request.query(`SELECT DISTINCT error_description FROM [replus_treceability].[dbo].[vision1_errorcode_master] WHERE error_code = '${v1error}'`);
       if (errorQuery.recordset.length > 0) {
@@ -1062,7 +1060,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
       }
 
       // Notify frontend with status and error if applicable
-      if (tags.vision1.V1_OKStatus && errorDescription) {
+      if (tags.vision1.OKStatus && errorDescription) {
         broadcast({ message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}. Error: ${errorDescription}` });
       } else {
         broadcast({ message: `Vision 1 Cycle Completed! Vision1 Status: ${statusToStore}` });
@@ -1070,7 +1068,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
       console.log("Vision 1 Cycle Completed!");
 
        // After completing Vision1 cycle, set to false
-       await writeCycleStartConfirm(tags.vision1.V1_RFID, socket, false);
+       await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
 
       tags = null; 
       console.log("RFID tags have been reset.");
@@ -1182,7 +1180,7 @@ async function processVision2(tags, socket) {
     let errorDescription = null;
 
     // Get the date_time for the given RFID
-    const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE = '${RFID}'`);
+    const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
       const moduleBarcode = dateResult.recordset[0].module_barcode;
@@ -1204,14 +1202,14 @@ async function processVision2(tags, socket) {
 
         if (result.recordset.length > 0) {
           // Both OKStatus and NOKStatus are false, update v2_live_status
-          if (!tags.vision2.V2_OKStatus && !tags.vision2.V2_NOKStatus) {
+          if (!tags.vision2.OKStatus && !tags.vision2.NOKStatus) {
             const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v2_live_status = 1, date_time = GETDATE() WHERE module_barcode = '${moduleBarcode}'`;
             console.log("updateLinkingQueryyyy:::", updateLinkingQuery);
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status for RFID: ${RFID}`);
 
             // processing is complete, send CycleStartConfirm to true
-            await writeCycleStartConfirmvision2(tags.vision2.V2_RFID, socket, true);
+            await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
           }
 
           // Either OKStatus or NOKStatus is true, update Vision 2 status
@@ -1274,7 +1272,7 @@ async function processVision2(tags, socket) {
             /******************** indrajeet code end **************************/
             
             // Notify frontend with status and error if applicable
-            if (tags.vision2.V2_NOKStatus && errorDescription) {
+            if (tags.vision2.NOKStatus && errorDescription) {
               broadcast({ message: `Vision 2 Cycle Completed! Vision 2 Status: ${statusToStore}. Error: ${errorDescription}` });
             } else {
               broadcast({ message: `Vision 2 Cycle Completed! Vision 2 Status: ${statusToStore}` });
@@ -1282,20 +1280,19 @@ async function processVision2(tags, socket) {
             console.log("Vision 2 Cycle Completed!");
 
             // After completing Vision2 cycle, set it back to false
-            await writeCycleStartConfirmvision2(tags.vision2.V2_RFID, socket, false);
+            await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
           }
         } else {
           console.error(`No record found for module_barcode: ${barcode.trim()}`);
         }
       }
     } else {
-      console.log(`No matching found for Vision 2: ${RFID}`);
+      console.log(`No matching RFID found for Vision 2: ${RFID}`);
     }
   } catch (error) {
     console.error('Error processing Vision 2 RFID:', error.message);
   }
 }
-
 
 
 // Function to process Welding 
@@ -1368,7 +1365,6 @@ async function processVision2(tags, socket) {
 //     console.error('Error processing Welding RFID:', error.message);
 //   }
 // }
-
 async function processWelding(tags, socket) {
 
   const curdate = new Date();
