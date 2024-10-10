@@ -751,7 +751,7 @@ async function processVision1Single(singleBarcode, tags, socket) {
     const request = new sql.Request(mainPool);
 
     const RFID = tags.vision1.V1_RFID;
-    const statusToStore = tags.vision1.OKStatus ? "OK" : tags.vision1.V1_NOKStatus ? "NOT OK" : null;
+    const statusToStore = tags.vision1.V1_OKStatus ? "OK" : tags.vision1.V1_NOKStatus ? "NOT OK" : null;
     const v1error = tags.vision1.V1_ERRORStatus;
     let errorDescription = null;
 
@@ -982,7 +982,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
     }
 
     const RFID = tags.vision1.V1_RFID;
-    const statusToStore = tags.vision1.OKStatus ? "OK" : tags.vision1.V1_NOKStatus ? "NOT OK" : null;
+    const statusToStore = tags.vision1.V1_OKStatus ? "OK" : tags.vision1.V1_NOKStatus ? "NOT OK" : null;
     const v1error = tags.vision1.V1_ERRORStatus;
     let errorDescription = null;
 
