@@ -445,7 +445,7 @@ const server = net.createServer(async (socket) => {
 //     }
 //   });
   
-// });
+});
 
 let scannedBarcodes = [];
 
