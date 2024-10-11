@@ -1217,7 +1217,7 @@ async function processVision2(tags, socket) {
             const v2Error = tags.vision2.ERRORStatus;
 
             /******************** Add Error Lookup ************************/
-            if (tags.vision2.V2_NOKStatus) {
+            if (tags.vision2.NOKStatus) {
               const errorQuery = await request.query(`SELECT DISTINCT error_description FROM [replus_treceability].[dbo].[vision2_errorcode_master] WHERE error_code = '${v2Error}'`);
               if (errorQuery.recordset.length > 0) {
                 errorDescription = errorQuery.recordset[0].error_description;
