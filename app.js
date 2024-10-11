@@ -1163,6 +1163,7 @@ function resetVariables() {
 //   }
 // }
 
+
 async function processVision2(tags, socket) {
 
   const curdate = new Date();
@@ -1170,7 +1171,6 @@ async function processVision2(tags, socket) {
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
-  // console.log("today_date Vision2::", today_date);
 
   const RFID = tags.vision2.RFID;
   console.log("Processing RFID for Vision 2 :", RFID);
@@ -1188,8 +1188,6 @@ async function processVision2(tags, socket) {
       console.log("dbDate:::", dbDate);
 
       const globalFormattedDateTime = formatDateTime(dbDate);
-      // console.log("Global Formatted DateTime ::", globalFormattedDateTime);
-
       // Split the moduleBarcode into individual barcodes
       const moduleBarcodes = moduleBarcode.split(',');
 
@@ -1204,7 +1202,8 @@ async function processVision2(tags, socket) {
           // Both OKStatus and NOKStatus are false, update v2_live_status
           if (!tags.vision2.OKStatus && !tags.vision2.NOKStatus) {
             const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v2_live_status = 1, date_time = GETDATE() WHERE module_barcode = '${moduleBarcode}'`;
-            console.log("updateLinkingQueryyyy:::", updateLinkingQuery);
+            console.log("updateLinkingQuerpppppy", updateLinkingQuery);
+            
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status for RFID: ${RFID}`);
 
@@ -1217,9 +1216,8 @@ async function processVision2(tags, socket) {
             const statusToStore = tags.vision2.OKStatus ? "OK" : "NOT OK";
             const v2Error = tags.vision2.ERRORStatus;
 
-
             /******************** Add Error Lookup ************************/
-            if (tags.vision2.NOKStatus) {
+            if (tags.vision2.V2_NOKStatus) {
               const errorQuery = await request.query(`SELECT DISTINCT error_description FROM [replus_treceability].[dbo].[vision2_errorcode_master] WHERE error_code = '${v2Error}'`);
               if (errorQuery.recordset.length > 0) {
                 errorDescription = errorQuery.recordset[0].error_description;
@@ -1230,7 +1228,7 @@ async function processVision2(tags, socket) {
             }
             /*************************************************************/
 
-            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${statusToStore}', v2_error = '${errorDescription}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
+            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${statusToStore}', v2_error = '${errorDescription || v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
             await request.query(updateClwStationQuery);
             console.log(`Updated Vision 2 status for RFID: ${RFID}`);
             
@@ -1263,7 +1261,7 @@ async function processVision2(tags, socket) {
               
               /******************** To send NOT OK Status in rework table ****************************/
               if (statusToStore === 'NOT OK') {
-                await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description) VALUES ('${barcode.trim()}', 'Vision 2', '${errorDescription}')`);
+                await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description) VALUES ('${barcode.trim()}', 'Vision 2', '${errorDescription || ''}')`);
                 console.log("Data inserted into replus_NOTOK_history_details for Vision 2");
               }
             } else {
@@ -1293,6 +1291,7 @@ async function processVision2(tags, socket) {
     console.error('Error processing Vision 2 RFID:', error.message);
   }
 }
+
 
 
 // Function to process Welding 
