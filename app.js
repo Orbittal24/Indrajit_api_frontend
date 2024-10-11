@@ -217,10 +217,10 @@ const server = net.createServer(async (socket) => {
             }
   
             // Processing for Vision 2 (skip if RFID is 'DA')
-            if (tags.vision2 && tags.vision2.RFID !== 'DA') {
+            if (tags.vision2 && tags.vision2.RFID !== 'DA' && tags.vision2.RFID !== '') {
               await processVision2(tags, socket); // Process RFID for Vision 2
             } else {
-              console.log('No Vision 2 tags received or RFID is "DA".');
+              console.log('No Vision 2 tags received or RFID is "DA" OR ''.');
             }
   
             // Processing for Welding (skip if RFID is 'DA')
