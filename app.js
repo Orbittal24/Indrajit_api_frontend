@@ -92,11 +92,11 @@ const server = net.createServer(async (socket) => {
             }
   
             // Processing for Vision 2 (skip if RFID is 'DA')
-            // if (tags.vision2 && tags.vision2.RFID !== 'DA' && tags.vision2.RFID !== '') {
+            if (tags.vision2 && tags.vision2.RFID !== 'DA' && tags.vision2.RFID !== '') {
               await processVision2(tags, socket); // Process RFID for Vision 2
-            // } else {
-              // console.log('No Vision 2 tags received or RFID is "DA" OR ''.');
-            // }
+            } else {
+              console.log('No Vision 2 tags received or RFID is "DA" OR ''.');
+            }
   
             // Processing for Welding (skip if RFID is 'DA')
             if (tags.welding && tags.welding.RFID !== 'DA') {
@@ -511,7 +511,7 @@ async function processRFIDTags(tags, socket) {
       broadcast({ message: 'Module Barcode and RFID linked successfully'});
       console.log("Module Barcode and RFID linked successfully");
 
-       // Write the CycleStartConfirm tag to true for Vision1
+       // Write the CycleStartConfirm tag to true for Vision1 for multiple barcodes
       await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
 
       const statusChangeMessage = {tag: 'CycleStartConfirm', RFID: RFID, status: 'changed to true'};
