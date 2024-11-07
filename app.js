@@ -451,12 +451,16 @@ async function processRFIDTagsSingle(tags, socket) {
         console.log(`Inserted new record for RFID: ${RFID}`);
       }
 
-      // Send success message to frontend for linking
-      broadcast({ message: 'Module Barcode and RFID linked successfully!'});
-      console.log("Module Barcode and RFID linked successfully!");
-      
-      // Write the CycleStartConfirm tag to true for Vision1
-      await writeCycleStartConfirm(tags.vision1.RFID, socket, true); 
+      const selectQuery = `SELECT RFID, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`;
+      const result1 = await request.query(selectQuery);
+      if (result1.recordset.module_barcode != '' && result1.recordset.RFID != '') {
+        // Send success message to frontend for linking
+        broadcast({ message: 'Module Barcode and RFID linked successfully!' });
+        console.log("Module Barcode and RFID linked successfully!");
+
+        // Write the CycleStartConfirm tag to true for Vision1
+        await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
+      } 
     }
 
     // If OKStatus or NOKStatus is true, insert/update in clw_station_status table
