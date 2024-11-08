@@ -456,7 +456,8 @@ async function processRFIDTagsSingle(tags, socket) {
 // If result1.recordset is an array and you want to access the first element
       const record = result1.recordset; // Access the first record
 
-if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {
+if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {l=
+   console.log(record);
         // Send success message to frontend for linking
         broadcast({ message: 'Module Barcode and RFID linked successfully!!!' });
         console.log("Module Barcode and RFID linked successfully!!!");
