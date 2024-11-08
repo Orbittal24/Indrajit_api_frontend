@@ -237,7 +237,7 @@ const server = net.createServer(async (socket) => {
             }
   
             // Process FPCB (skip if RFID is 'DA')
-            if (tags.fpcb && tags.fpcb.RFID !== 'DA' && && tags.fpcb.RFID != 0) {
+            if (tags.fpcb && tags.fpcb.RFID !== 'DA' && tags.fpcb.RFID != 0) {
               await processFpcb(tags, socket); // Process RFID for FPCB
             } else {
               console.log('No valid FPCB RFID or RFID is "DA".');
