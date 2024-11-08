@@ -914,9 +914,8 @@ async function processVision2(tags, socket) {
             
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status for RFID: ${RFID}`);
-
-       if (result) {
-         console.log(result)
+console.log(result)
+       if (result.v1_status === "OK") {
            await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
          } 
             
