@@ -454,7 +454,7 @@ async function processRFIDTagsSingle(tags, socket) {
       const result1 = await request.query(selectQuery);
 
 // If result1.recordset is an array and you want to access the first element
-      const record = result1.recordset; // Access the first record
+      const record = result1.recordset[0]; // Access the first record
 
 if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {l=
    console.log(record);
