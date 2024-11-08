@@ -215,7 +215,7 @@ const server = net.createServer(async (socket) => {
             tags = jsonData;
   
             // Skip processing if vision1 RFID is 'DA'
-            if (tags.vision1 && tags.vision1.RFID === 'DA') {
+            if (tags.vision1 && tags.vision1.RFID === 'DA' && tags.vision1.RFID == 0) {
               console.log('RFID "DA" is not accepted. Skipping processing for Vision 1.');
             } else {
               // Process RFID for Vision 1 if valid (not 'DA')
@@ -223,21 +223,21 @@ const server = net.createServer(async (socket) => {
             }
   
             // Process Vision 2 (skip if RFID is 'DA')
-            if (tags.vision2 && tags.vision2.RFID !== 'DA' && tags.vision2.RFID !== 0) {
+            if (tags.vision2 && tags.vision2.RFID !== 'DA' && tags.vision2.RFID != 0) {
               await processVision2(tags, socket); // Process RFID for Vision 2
             } else {
               console.log('No valid Vision 2 RFID or RFID is "DA".');
             }
   
             // Process Welding (skip if RFID is 'DA')
-            if (tags.welding && tags.welding.RFID !== 'DA') {
+            if (tags.welding && tags.welding.RFID !== 'DA' && tags.welding.RFID != 0) {
               await processWelding(tags, socket); // Process RFID for Welding
             } else {
               console.log('No valid Welding RFID or RFID is "DA".');
             }
   
             // Process FPCB (skip if RFID is 'DA')
-            if (tags.fpcb && tags.fpcb.RFID !== 'DA') {
+            if (tags.fpcb && tags.fpcb.RFID !== 'DA' && && tags.fpcb.RFID != 0) {
               await processFpcb(tags, socket); // Process RFID for FPCB
             } else {
               console.log('No valid FPCB RFID or RFID is "DA".');
