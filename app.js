@@ -465,7 +465,7 @@ if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID 
         // Write the CycleStartConfirm tag to true for Vision1
         await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
       } else {
-   console.log("Module Barcode and RFID not linked successfully!!!");
+   console.log("Module Barcode and RFID not linked!!!");
       }
     }
 
