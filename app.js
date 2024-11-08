@@ -914,10 +914,10 @@ async function processVision2(tags, socket) {
             
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status for RFID: ${RFID}`);
-console.log(result)
-       if (result.v1_status === "OK") {
-           await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
-         } 
+          console.log(result.recordset[0])
+          if (result.recordset[0].v1_status === "OK") {
+             await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
+          } 
             
           }
 
@@ -1046,9 +1046,11 @@ async function processWelding(tags, socket) {
             const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET welding_live_status = 1, date_time = GETDATE() WHERE module_barcode = '${moduleBarcode}'`;
             await request.query(updateLinkingQuery);
             console.log(`Updated welding_live_status for RFID: ${RFID}`);
-
+            
+          if (result.recordset[0].v2_status === "OK") {  
             // processing is complete, send CycleStartConfirm to true
             await writeCycleStartConfirmwelding(tags.welding.RFID, socket, true);
+          }
           }
 
           // Update Welding status when either OKStatus or NOKStatus is true
