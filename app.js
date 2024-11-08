@@ -223,7 +223,7 @@ const server = net.createServer(async (socket) => {
             }
   
             // Process Vision 2 (skip if RFID is 'DA')
-            if (tags.vision2 && tags.vision2.RFID !== 'DA') {
+            if (tags.vision2 && tags.vision2.RFID !== 'DA' && tags.vision2.RFID !== 0) {
               await processVision2(tags, socket); // Process RFID for Vision 2
             } else {
               console.log('No valid Vision 2 RFID or RFID is "DA".');
@@ -456,7 +456,7 @@ async function processRFIDTagsSingle(tags, socket) {
 // If result1.recordset is an array and you want to access the first element
       const record = result1.recordset[0]; // Access the first record
 
-if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {l=
+if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {
    console.log(record);
         // Send success message to frontend for linking
         broadcast({ message: 'Module Barcode and RFID linked successfully!!!' });
@@ -915,8 +915,11 @@ async function processVision2(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status for RFID: ${RFID}`);
 
-            // processing is complete, send CycleStartConfirm to true
-            await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
+       if (result) {
+         console.log(result)
+           await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
+         } 
+            
           }
 
           // Either OKStatus or NOKStatus is true, update Vision 2 status
