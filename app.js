@@ -440,17 +440,18 @@ async function processRFIDTagsSingle(tags, socket) {
     // Insert/update in linking_module_RFID table when status is false
     if (!tags.vision1.OKStatus || !tags.vision1.NOKStatus) {
       // RFID exists, update with the single barcode if necessary
-      if (result.recordset.length > 0 && RFID != 0) {
-        const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${singleBarcode}', v1_live_status = 1 WHERE RFID = '${RFID}'`;
-        await request.query(updateQuery);
-        console.log(`Updated entry for RFID: ${RFID}`);
-      } else {
-        // New RFID, insert new record
-        const insertQuery = `INSERT INTO [replus_treceability].[dbo].[linking_module_RFID] (RFID, module_barcode, v1_live_status, date_time) VALUES ('${RFID}', '${singleBarcode}', 1, '${today_date}')`;
-        await request.query(insertQuery);
-        console.log(`Inserted new record for RFID: ${RFID}`);
+      if( RFID != 0){
+          if (result.recordset.length > 0) {
+            const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${singleBarcode}', v1_live_status = 1 WHERE RFID = '${RFID}'`;
+            await request.query(updateQuery);
+            console.log(`Updated entry for RFID: ${RFID}`);
+          } else {
+            // New RFID, insert new record
+            const insertQuery = `INSERT INTO [replus_treceability].[dbo].[linking_module_RFID] (RFID, module_barcode, v1_live_status, date_time) VALUES ('${RFID}', '${singleBarcode}', 1, '${today_date}')`;
+            await request.query(insertQuery);
+            console.log(`Inserted new record for RFID: ${RFID}`);
+          }
       }
- 
       const result1 = await request.query(selectQuery);
 
 // If result1.recordset is an array and you want to access the first element
