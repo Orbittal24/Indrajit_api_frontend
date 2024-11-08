@@ -450,13 +450,16 @@ async function processRFIDTagsSingle(tags, socket) {
         await request.query(insertQuery);
         console.log(`Inserted new record for RFID: ${RFID}`);
       }
-
-      const selectQuery = `SELECT RFID, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`;
+ 
       const result1 = await request.query(selectQuery);
-      if (result1.recordset.module_barcode != '' && result1.recordset.RFID != '') {
+
+// If result1.recordset is an array and you want to access the first element
+      const record = result1.recordset; // Access the first record
+
+if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {
         // Send success message to frontend for linking
-        broadcast({ message: 'Module Barcode and RFID linked successfully!..' });
-        console.log("Module Barcode and RFID linked successfully!..");
+        broadcast({ message: 'Module Barcode and RFID linked successfully!!!' });
+        console.log("Module Barcode and RFID linked successfully!!!");
 
         // Write the CycleStartConfirm tag to true for Vision1
         await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
