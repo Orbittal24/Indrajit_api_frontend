@@ -474,6 +474,7 @@ if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID 
     if (tags.vision1.OKStatus || tags.vision1.NOKStatus) {
       console.log('Status is true, proceeding to update clw_station_status for single module.');
       await processVision1Single(singleBarcode, tags, socket);
+      
       resetVariables();
     }
   } catch (error) {
@@ -670,11 +671,19 @@ console.log("date time For Vision 1",dateResult);
         // Update the existing record
         const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${singleBarcode}'`;
         await request.query(updateQuery);
+
+            // processing is complete, send CycleStartConfirm to false for Vision1
+      await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
+        
         console.log(`Updated Vision1 status for single module: ${singleBarcode}`);
       } else {
         // Insert a new record if the barcode doesn't exist
         const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${singleBarcode}', '${statusToStore}', '${errorDescription}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
         await request.query(insertQuery);
+
+            // processing is complete, send CycleStartConfirm to false for Vision1
+      await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
+        
         console.log(`Inserted new Vision1 status for single module: ${singleBarcode}`);
       }
         // update the `v1_live_status` in `linking_module_RFID`
