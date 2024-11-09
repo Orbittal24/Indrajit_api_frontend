@@ -901,9 +901,13 @@ async function processVision2(tags, socket) {
 
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
+
+       const MODULE_BARCODE_CLW = await request.query(`SELECT module_barcode FROM [replus_treceability].[dbo].[clw_station_status] WHERE RFID = '${RFID}'`);
+    
+    console.log("MODULE_BARCODE_CLW",MODULE_BARCODE_CLW);    
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
-      const moduleBarcode = dateResult.recordset[0].module_barcode;
+      const moduleBarcode = MODULE_BARCODE_CLW.recordset[0].module_barcode;
       console.log("moduleBarcode:::", moduleBarcode);
       console.log("dbDate:::", dbDate);
 
