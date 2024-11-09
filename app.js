@@ -656,6 +656,8 @@ async function processVision1Single(singleBarcode, tags, socket) {
 
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
+console.log("date time For Vision 1",dateResult);
+    
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
       const globalFormattedDateTime = formatDateTime(dbDate);
