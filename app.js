@@ -249,7 +249,7 @@ const server = net.createServer(async (socket) => {
         } else {
           // Handle barcode input
           barcode = jsonString;
-          console.log('Received barcode:', barcode);
+          console.log('Received barcode11111111:', barcode);
   
           handleBarcodeScan(barcode);
   
@@ -336,12 +336,12 @@ function handleBarcodeScan(barcode) {
 }
 
 async function singlemodule(barcode, socket) {
-  console.log(`Single module processing for: ${barcode}`);
+  console.log(`Single module processing for11111111111: ${barcode}`);
 
   // Check if the barcode is already scanned, if not, set it as the scanned barcode
   if (!scannedBarcode1) {
     scannedBarcode1 = barcode; 
-    console.log('Single module barcode scanned successfully:', scannedBarcode1);
+    console.log('Single module barcode scanned successfully11111111111:', scannedBarcode1);
 
     if (socket && socket.write) {
       broadcast({ message: 'Module Barcode Scanned Successfully!'});
@@ -440,8 +440,8 @@ async function processRFIDTagsSingle(tags, socket) {
     // Insert/update in linking_module_RFID table when status is false
     if (!tags.vision1.OKStatus || !tags.vision1.NOKStatus) {
       // RFID exists, update with the single barcode if necessary
-      if( RFID != 0){
-          if (result.recordset.length > 0) {
+      if( RFID != 0 && singleBarcode != ''){
+          if (result.recordset.length > 0 ) {
             const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${singleBarcode}', v1_live_status = 1 WHERE RFID = '${RFID}'`;
             await request.query(updateQuery);
             console.log(`Updated entry for RFID: ${RFID}`);
