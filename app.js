@@ -440,7 +440,7 @@ async function processRFIDTagsSingle(tags, socket) {
     // Insert/update in linking_module_RFID table when status is false
     if (!tags.vision1.OKStatus || !tags.vision1.NOKStatus) {
       // RFID exists, update with the single barcode if necessary
-      if( RFID != 0 && singleBarcode != ''){
+      if( RFID != 0){
           if (result.recordset.length > 0 ) {
             const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${singleBarcode}', v1_live_status = 1 WHERE RFID = '${RFID}'`;
             await request.query(updateQuery);
