@@ -1189,8 +1189,10 @@ async function processFpcb(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated live_status for RFID: ${RFID}`);
 
-            // When processing starts, set it to true
+            if(result.recordset.welding_status == "OK" && RFID != 0 && RFID != "DA" ){
+               // When processing starts, set it to true
             await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, true);
+            }
           }
 
           // Update FPCB status when either OKStatus or NOKStatus is true
@@ -1214,7 +1216,9 @@ async function processFpcb(tags, socket) {
 
             await request.query(updateClwStationQuery);
             console.log(`Updated FPCB status for RFID: ${RFID}`);
-
+            
+             await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
+            
             // Update the `live_status` in `linking_module_RFID`
             const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET fpcb_live_status = '0' WHERE module_barcode = '${moduleBarcode}'`;
             await request.query(updateLinkingQuery);
@@ -1259,7 +1263,7 @@ async function processFpcb(tags, socket) {
             console.log("FPCB Cycle Completed!");
 
             // After processing completes, set cyclestartconfirm back to false
-            await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
+            //await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
           }
         } else {
           console.error(`No record found for module_barcode: ${trimmedBarcode}`);
