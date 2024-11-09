@@ -740,7 +740,7 @@ console.log("date time For Vision 1",dateResult);
 
      
        // processing is complete, send CycleStartConfirm to false for Vision1
-      await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
+      // await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
 
     } else {
       console.error(`No record found for RFID: ${RFID}`);
@@ -927,7 +927,7 @@ async function processVision2(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status for RFID: ${RFID}`);
           console.log(result.recordset[0])
-          if (result.recordset[0].v1_status === "OK") {
+          if (result.recordset[0].v1_status === "OK" && RFID != 0 && RFID != 'DA') {
              await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
           } 
             
@@ -952,6 +952,8 @@ async function processVision2(tags, socket) {
 
             const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${statusToStore}', v2_error = '${errorDescription || v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
             await request.query(updateClwStationQuery);
+
+           await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
             console.log(`Updated Vision 2 status for RFID: ${RFID}`);
             
             // update the `v1_live_status` in `linking_module_RFID`
@@ -1000,7 +1002,7 @@ async function processVision2(tags, socket) {
             console.log("Vision 2 Cycle Completed!");
 
             // After completing Vision2 cycle, set it back to false
-            await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
+            // await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
           }
         } else {
           console.error(`No record found for module_barcode: ${barcode.trim()}`);
@@ -1059,7 +1061,7 @@ async function processWelding(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated welding_live_status for RFID: ${RFID}`);
             
-          if (result.recordset[0].v2_status === "OK") {  
+          if (result.recordset[0].v2_status === "OK" && RFID != 0 && RFID != "DA") {  
             // processing is complete, send CycleStartConfirm to true
             await writeCycleStartConfirmwelding(tags.welding.RFID, socket, true);
           }
@@ -1086,6 +1088,7 @@ async function processWelding(tags, socket) {
             const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${statusToStore}', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
             await request.query(updateClwStationQuery);
             console.log(`Updated Welding status for RFID: ${RFID}`);
+             await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
 
             // update the `welding_live_status` in `linking_module_RFID`
             const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET welding_live_status = '0'`;
@@ -1132,7 +1135,7 @@ async function processWelding(tags, socket) {
             console.log("Welding Cycle Completed!");
 
             // After processing completing, set it back to false
-            await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
+            // await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
           }
         } else {
           console.error(`No record found for module_barcode: ${barcode.trim()}`);
