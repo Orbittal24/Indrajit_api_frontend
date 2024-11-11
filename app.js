@@ -931,7 +931,7 @@ async function processVision2(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status for RFID: ${RFID}`);
           console.log(result.recordset[0])
-          if (result.recordset[0].v1_status === "OK" && RFID != 0 && RFID != 'DA') {
+          if (result.recordset[0].v1_status === "OK" && RFID != 0 && RFID != 'DA' && result.recordset[0].v2_status !== "OK") {
              await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
           } 
             
@@ -1068,7 +1068,7 @@ async function processWelding(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated welding_live_status for RFID: ${RFID}`);
             
-          if (result.recordset[0].v2_status === "OK" && RFID != 0 && RFID != "DA") {  
+          if (result.recordset[0].v2_status === "OK" && RFID != 0 && RFID != "DA" && result.recordset[0].welding_satus !== "OK" &&  result.recordset[0].welding_satus !== "NOK" ) {  
             // processing is complete, send CycleStartConfirm to true
             await writeCycleStartConfirmwelding(tags.welding.RFID, socket, true);
           }
@@ -1198,7 +1198,7 @@ async function processFpcb(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated live_status for RFID: ${RFID}`);
 
-            if(result.recordset[0].welding_status == "OK" && RFID != 0 && RFID != "DA" ){
+            if(result.recordset[0].welding_status == "OK" && RFID != 0 && RFID != "DA" && result.recordset[0].fpcb_satus !== "OK"){
                // When processing starts, set it to true
             await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, true);
             }
