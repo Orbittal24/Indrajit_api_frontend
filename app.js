@@ -1,3 +1,6 @@
+
+
+
 const net = require('net');
 const sql = require('mssql');
 const axios = require('axios');
@@ -15,9 +18,9 @@ function broadcast(message) {
 
 // Database connection config
 const dbConfig = {
- user: "admin2",
-  password: "reset@123",
-  server: "REP-TRACE",
+ user: "admin1",
+  password: "admin1",
+  server: "DESKTOP-RREMJUE",
   database: "replus_treceability",
   options: {
     encrypt: false,
@@ -57,142 +60,7 @@ const server = net.createServer(async (socket) => {
   console.log('Client connected....');
 
  
-//******* with do not accept RFID as DA *******//
- // socket.on('data', async (data) => {
- //    try {
- //      const receivedData = data.toString().trim(); // Convert buffer to string and trim whitespace
-  
- //      // Split the concatenated JSON objects based on `}{` as a delimiter between them.
- //      const jsonStrings = receivedData.split(/(?<=\})\s*(?=\{)/);
-  
- //      for (const jsonString of jsonStrings) {
- //        let barcode = null;
-  
- //        // Check if the received string is RFID data (starts with `{`)
- //        if (jsonString.startsWith('{')) {
- //          // Handle RFID tags
- //          try {
- //            const jsonData = JSON.parse(jsonString);
- //            console.log('Received RFID tags:', jsonData);
-  
- //            // Check if RFID tag in vision1 is 'DA' and skip processing for this tag
- //            if (jsonData.vision1 && jsonData.vision1.RFID === 'DA') {
- //              console.log('RFID "DA" is not accepted. Skipping processing for Vision 1.');
- //              continue; // Skip processing for RFID 'DA'
- //            }
-  
- //            // Save tags globally
- //            tags = jsonData;
-  
- //            // Process RFID tags after receiving them
- //            if (scannedBarcode1 && scannedBarcode2) {
- //              await processRFIDTags(tags, socket); // Process RFID for multiple barcodes
- //            } else if (scannedBarcode1 && !scannedBarcode2) {
- //              await processRFIDTagsSingle(tags, socket); // Process RFID for single barcode
- //            }
-  
- //            // Processing for Vision 2 (skip if RFID is 'DA')
- //            if (tags.vision2 && tags.vision2.RFID !== 'DA' && tags.vision2.RFID !== '') {
- //              await processVision2(tags, socket); // Process RFID for Vision 2
- //            } else {
- //              console.log('No Vision 2 tags received or RFID is "DA"');
- //            }
-  
- //            // Processing for Welding (skip if RFID is 'DA')
- //            if (tags.welding && tags.welding.RFID !== 'DA') {
- //              await processWelding(tags, socket); // Process RFID for Welding
- //            } else {
- //              console.log('No Welding tags received or RFID is "DA"');
- //            }
-  
- //            // Processing for FPCB (skip if RFID is 'DA')
- //            if (tags.fpcb && tags.fpcb.RFID !== 'DA') {
- //              await processFpcb(tags, socket); // Process RFID for FPCB
- //            } else {
- //              console.log('No FPCB tags received or RFID is "DA"');
- //            }
-  
- //          } catch (e) {
- //            console.error('Error parsing RFID tags:', e.message);
- //          }
- //        } else {
- //          // Handle barcode input
- //          barcode = jsonString;
- //          console.log('Received barcode:', barcode);
-  
- //          handleBarcodeScan(barcode);
-  
- //          // Call the API for each new barcode received
- //          try {
- //            const apiUrl = 'http://127.0.0.1:4000/checkBarcode';
-  
- //            const response = await axios.post(apiUrl, {
- //              scannedBarcode: barcode,
- //            });
-  
- //            const message = response.data.message;
- //            console.log(`API Response: ${message}`);
-  
- //            // Send the API response to the frontend
- //            broadcast({ message: 'Barcode Scanned', barcode });
-  
- //            // If the module is complete, proceed with further processing
- //            if (message === 'Module complete in cell sorting.') {
- //              broadcast({ message: 'Module complete in cell sorting!', barcode });
-  
- //              const module_code = barcode.split('_')[0];
- //              const request = new sql.Request(mainPool);
- //              const result = await request.input('module_code', sql.VarChar, module_code).query(`SELECT no_of_modules FROM vision_pack_master WHERE module_code = '${module_code}'`);
-  
- //              // Convert moduleCount to an integer
- //              const moduleCount = parseInt(result.recordset[0].no_of_modules, 10);
-  
- //              if (moduleCount === 1) {
- //                // Process single module
- //                await singlemodule(barcode, socket);
-  
- //                // Process RFID tags if already received and RFID is not 'DA'
- //                if (tags && tags.vision1 && tags.vision1.RFID !== 'DA') {
- //                  await processRFIDTagsSingle(tags, socket);
- //                  // Now processing is complete, send CycleStartConfirm
- //                  // await writeCycleStartConfirm(tags.vision1.RFID, socket);
- //                } else {
- //                  console.log('Waiting for valid RFID tags...');
- //                }
- //              } else if (moduleCount > 1) {
- //                // Process multiple modules
- //                await multiplemodule(barcode, socket);
-  
- //                // Process RFID tags if both barcodes are scanned and RFID is not 'DA'
- //                if (scannedBarcode1 && scannedBarcode2 && tags.vision1.RFID !== 'DA') {
- //                  await processRFIDTags(tags, socket);
- //                  // Now processing is complete, send CycleStartConfirm
- //                  // await writeCycleStartConfirm(tags.vision1.RFID, socket);
- //                } else if (scannedBarcode1 && !scannedBarcode2) {
- //                  console.log('1st barcode scanned, waiting for the 2nd one.');
- //                }
- //              } else {
- //                console.log('Invalid module count');
- //              }
- //            } else {
- //              console.log('Module is not complete. Halting further processing.');
- //              broadcast({ message: 'Module is not complete in Cell Sorting!', barcode });
- //              return;
- //            }
-  
- //          } catch (error) {
- //            if (error.response && error.response.status === 404) {
- //              console.error('API route not found, check the API URL or route.');
- //            } else {
- //              console.error('Error calling checkBarcode API:', error.message);
- //            }
- //          }
- //        }
- //      }
- //    } catch (error) {
- //      console.error('Error processing data:', error.message);
- //    }
- // });
+ 
 
     socket.on('data', async (data) => {
     try {
@@ -255,7 +123,7 @@ const server = net.createServer(async (socket) => {
   
           // Call the API for each new barcode received
           try {
-            const apiUrl = 'http://127.0.0.1:4000/checkBarcode';
+            const apiUrl = 'http://localhost:4000/checkBarcode';
   
             const response = await axios.post(apiUrl, {
               scannedBarcode: barcode,
@@ -1194,12 +1062,13 @@ async function processFpcb(tags, socket) {
         if (result.recordset.length > 0) {
           // Update live_status if both OKStatus and NOKStatus are false
           if (!tags.fpcb.OKStatus && !tags.fpcb.NOKStatus) {
-            const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET live_status = 1, date_time = GETDATE() WHERE module_barcode = '${moduleBarcode}'`;
+            const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET fpcb_live_status = 1, date_time = GETDATE() WHERE module_barcode = '${moduleBarcode}'`;
             await request.query(updateLinkingQuery);
             console.log(`Updated live_status for RFID: ${RFID}`);
 
-            if(result.recordset[0].welding_status == "OK" && RFID != 0 && RFID != "DA" ){
+            if(result.recordset.welding_status == "OK" && RFID != 0 && RFID != "DA" ){
                // When processing starts, set it to true
+               console.log("processing starts for fpcb cyclestart conform true");
             await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, true);
             }
           }
