@@ -1198,7 +1198,7 @@ async function processFpcb(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated live_status for RFID: ${RFID}`);
 
-            if(result.recordset[0].welding_status == "OK" && RFID != 0 && RFID != "DA" && ){
+            if(result.recordset[0].welding_status == "OK" && RFID != 0 && RFID != "DA" ){
                // When processing starts, set it to true
             await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, true);
             }
