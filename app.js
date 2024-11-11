@@ -1270,9 +1270,9 @@ function broadcast(message) {
 
 // Database connection config
 const dbConfig = {
- user: "admin1",
-  password: "admin1",
-  server: "DESKTOP-RREMJUE",
+ user: "admin2",
+  password: "reset@123",
+  server: "REP-TRACE",
   database: "replus_treceability",
   options: {
     encrypt: false,
