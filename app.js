@@ -1068,7 +1068,7 @@ async function processWelding(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated welding_live_status for RFID: ${RFID}`);
             
-          if (result.recordset[0].v2_status === "OK" && RFID != 0 && RFID != "DA" && result.recordset[0].welding_status !== "OK") {  
+          if (result.recordset[0].v2_status === "OK" && RFID != 0 && RFID != "DA" && result.recordset[0].welding_status !== "OK" && result.recordset[0].welding_status !== "NOT OK") { 
             // processing is complete, send CycleStartConfirm to true
             await writeCycleStartConfirmwelding(tags.welding.RFID, socket, true);
           }
