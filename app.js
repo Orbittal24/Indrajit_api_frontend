@@ -1078,6 +1078,10 @@ async function processWelding(tags, socket) {
           if (tags.welding.OKStatus || tags.welding.NOKStatus) {
             const statusToStore = tags.welding.OKStatus ? "OK" : "NOT OK";
             const weldingError = tags.welding.ERRORStatus;
+            const WeldingCorePower = tags.welding.WeldingCorePower;
+            const WeldingRadius = tags.welding.WeldingRadius;
+            const WeldingRingPower = tags.welding.WeldingRingPower;
+            const WeldingSpeed = tags.welding.WeldingSpeed;
 
 
             /******************** Add Error Lookup ************************/
@@ -1092,7 +1096,7 @@ async function processWelding(tags, socket) {
             }
             /*************************************************************/
 
-            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${statusToStore}', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
+            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${statusToStore}', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${barcode.trim()}'`;
             await request.query(updateClwStationQuery);
             console.log(`Updated Welding status for RFID: ${RFID}`);
              await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
@@ -1208,6 +1212,9 @@ async function processFpcb(tags, socket) {
           if (tags.fpcb.OKStatus || tags.fpcb.NOKStatus) {
             const statusToStore = tags.fpcb.OKStatus ? "OK" : "NOT OK";
             const fpcbError = tags.fpcb.ERRORStatus;
+            const fpcbRadius = tags.fpcb.FPCBWeldingRadius;
+            const fpcbPower = tags.fpcb.FPCBWeldingPower;
+            const fpcbSpeed = tags.fpcb.FPCBWeldingSpeed;
 
             /******************** Add Error Lookup ************************/
             if (tags.fpcb.NOKStatus) {
@@ -1221,7 +1228,7 @@ async function processFpcb(tags, socket) {
             }
             /*************************************************************/
             
-            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${statusToStore}', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}' WHERE module_barcode = '${trimmedBarcode}'`;
+            const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${statusToStore}', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode = '${trimmedBarcode}'`;
 
             await request.query(updateClwStationQuery);
             console.log(`Updated FPCB status for RFID: ${RFID}`);
