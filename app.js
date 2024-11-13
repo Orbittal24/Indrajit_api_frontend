@@ -902,7 +902,7 @@ async function processVision2(tags, socket) {
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
 
-       const MODULE_BARCODE_CLW = await request.query(`SELECT module_barcode FROM [replus_treceability].[dbo].[clw_station_status] WHERE RFID = '${RFID}'`);
+     const MODULE_BARCODE_CLW = await request.query(`SELECT TOP 1 module_barcode FROM [replus_treceability].[dbo].[clw_station_status] WHERE RFID = '${RFID}' ORDER BY sr_no DESC`);
     
     console.log("MODULE_BARCODE_CLW",MODULE_BARCODE_CLW);    
     if (dateResult.recordset.length > 0) {
@@ -1042,7 +1042,7 @@ async function processWelding(tags, socket) {
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
 
-      const MODULE_BARCODE_CLW = await request.query(`SELECT module_barcode FROM [replus_treceability].[dbo].[clw_station_status] WHERE RFID = '${RFID}'`);
+    const MODULE_BARCODE_CLW = await request.query(`SELECT TOP 1 module_barcode FROM [replus_treceability].[dbo].[clw_station_status] WHERE RFID = '${RFID}' ORDER BY sr_no DESC`);
     
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
@@ -1179,7 +1179,7 @@ async function processFpcb(tags, socket) {
     
     // Get the date_time for the given RFID
     const dateResult = await request.query(`SELECT date_time, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`);
-       const MODULE_BARCODE_CLW = await request.query(`SELECT module_barcode FROM [replus_treceability].[dbo].[clw_station_status] WHERE RFID = '${RFID}'`);
+    const MODULE_BARCODE_CLW = await request.query(`SELECT TOP 1 module_barcode FROM [replus_treceability].[dbo].[clw_station_status] WHERE RFID = '${RFID}' ORDER BY sr_no DESC`);
     
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
