@@ -442,7 +442,7 @@ async function processRFIDTagsSingle(tags, socket) {
       // RFID exists, update with the single barcode if necessary
       if( RFID != 0){
           if (result.recordset.length > 0 ) {
-            const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${singleBarcode}', v1_live_status = 1 WHERE RFID = '${RFID}'`;
+                      const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${singleBarcode}', v1_live_status = 1, date_time = '${today_date}'  WHERE RFID = '${RFID}'`;
             await request.query(updateQuery);
             console.log(`Updated entry for RFID: ${RFID}`);
           } else {
