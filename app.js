@@ -566,17 +566,27 @@ if(RFID != 0){
     console.log("Module Barcode and RFID linked successfully");
   const result1 = await request.query(selectQuery);
  // If result1.recordset is an array and you want to access the first element
-     Double_module_barcode = await request.query(`
-      WITH RankedRecords AS (
-          SELECT [v1_status], [v1_end_date], 
-              ROW_NUMBER() OVER (PARTITION BY [v1_end_date] ORDER BY [v1_end_date] DESC) AS RowNum
-          FROM [replus_treceability].[dbo].[clw_station_status]
-          WHERE [RFID] = '${RFID}'
-      )
-      SELECT [v1_status], [v1_end_date]
-      FROM RankedRecords
-      WHERE RowNum <= 2
-      ORDER BY [v1_end_date] DESC;
+    Double_module_barcode = await request.query(`
+       WITH RankedRecords AS (
+    SELECT [v1_status], [v1_end_date], 
+        ROW_NUMBER() OVER (PARTITION BY [v1_end_date] ORDER BY [sr_no] DESC) AS RowNum
+    FROM [replus_treceability].[dbo].[clw_station_status]
+    WHERE [RFID] = '15'
+)
+, FilteredRecords AS (
+    SELECT [v1_status], [v1_end_date]
+    FROM RankedRecords
+    WHERE RowNum <= 2
+)
+SELECT [v1_status], [v1_end_date]
+FROM FilteredRecords
+WHERE [v1_end_date] IN (
+    SELECT [v1_end_date]
+    FROM FilteredRecords
+    GROUP BY [v1_end_date]
+    HAVING COUNT(*) = 2
+)
+ORDER BY [v1_end_date] DESC;
   `);
 
   // Log the query results to see what was returned
@@ -584,9 +594,8 @@ if(RFID != 0){
 
   // If Double_module_barcode is null or doesn't contain enough records, proceed anyway
   if (
-      !Double_module_barcode || 
-      !Double_module_barcode.recordset || 
-      Double_module_barcode.recordset.length < 2
+    Double_module_barcode == null &&
+      !Double_module_barcode   
   ) {
       console.log('Double_module_barcode is null or contains less than 2 records. Proceeding with the logic.');
 
@@ -605,25 +614,21 @@ if(RFID != 0){
           };
 
           socket.write(JSON.stringify(statusChangeMessage));
-          console.log('CycleStartConfirm written for Vision1.');
+          console.log('CycleStartConfirm written for first Vision1.');
       }
   } else {
       // If Double_module_barcode has at least 2 records, process them
       const firstRecord = Double_module_barcode.recordset[0];
-      const secondRecord = Double_module_barcode.recordset[1];
+      // const secondRecord = Double_module_barcode.recordset[1];
 
       // Assuming result1 is another query you are performing earlier
       const record = result1 && result1.recordset && result1.recordset[0]; // Access the first record of result1
 
       // Check conditions before proceeding
-      if (
-          firstRecord.v1_status !== 'OK' && 
-          secondRecord.v1_status !== 'OK' && 
-          record && 
+      if (firstRecord.v1_status !== 'OK' && record && 
           record.module_barcode !== '' && 
           record.RFID !== '' && 
-          record.RFID !== null
-      ) {
+          record.RFID !== null) {
           // Write the CycleStartConfirm tag to true for Vision1 for multiple barcodes
           await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
 
@@ -634,7 +639,7 @@ if(RFID != 0){
           };
 
           socket.write(JSON.stringify(statusChangeMessage));
-          console.log('CycleStartConfirm written for Vision1.');
+          console.log('CycleStartConfirm written secound for Vision1.');
       }
   }
   } catch (error) {
