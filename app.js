@@ -850,13 +850,13 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
 
           if (statusResult.recordset.length > 0) {
             // Update the existing record
-            const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${combinedBarcodes}'`;
+            const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = 'null', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${combinedBarcodes}'`;
             await request.query(updateQuery);
             console.log(`Updated clw_station_status for barcode: ${combinedBarcodes}`);
             
           } else {
             // Insert a new record if it doesn't exist
-            const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${barcode}', '${statusToStore}', '${errorDescription}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
+            const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${barcode}', '${statusToStore}', 'null', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
             await request.query(insertQuery);
             console.log(`Inserted new clw_station_status record for barcode: ${combinedBarcodes}`);
 
