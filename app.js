@@ -1382,7 +1382,7 @@ async function processWelding(tags, socket) {
 
 
             if (statusToStore === "OK") {
-              const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${statusToStore}', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '1230', Robot_Welding_Radius = '4.5', Robot_Welding_Ring_Power = '12.34', Robot_Welding_Speed = '1.0' WHERE module_barcode = '${barcode.trim()}'`;
+              const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${statusToStore}', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}',  Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${barcode.trim()}'`;
 
               await request.query(updateClwStationQuery);
               console.log(`Updated Welding status for RFID: ${RFID}`);
@@ -1394,10 +1394,10 @@ async function processWelding(tags, socket) {
 
               if (ModuleStatus == 42) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '1230', Robot_Welding_Radius = '4.5', Robot_Welding_Ring_Power = '12.34', Robot_Welding_Speed = '1.0' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}',  Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '1230', Robot_Welding_Radius = '4.5', Robot_Welding_Ring_Power = '12.34', Robot_Welding_Speed = '1.0' WHERE module_barcode = '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
@@ -1408,10 +1408,10 @@ async function processWelding(tags, socket) {
               }
               else if (ModuleStatus == 41) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '1230', Robot_Welding_Radius = '4.5', Robot_Welding_Ring_Power = '12.34', Robot_Welding_Speed = '1.0' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '1230', Robot_Welding_Radius = '4.5', Robot_Welding_Ring_Power = '12.34', Robot_Welding_Speed = '1.0' WHERE module_barcode = '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
@@ -1422,10 +1422,10 @@ async function processWelding(tags, socket) {
               }
               else if (ModuleStatus == 43) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '1230', Robot_Welding_Radius = '4.5', Robot_Welding_Ring_Power = '12.34', Robot_Welding_Speed = '1.0' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '1230', Robot_Welding_Radius = '4.5', Robot_Welding_Ring_Power = '12.34', Robot_Welding_Speed = '1.0' WHERE module_barcode = '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}',  Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
