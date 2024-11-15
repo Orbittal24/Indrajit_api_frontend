@@ -550,7 +550,7 @@ async function processRFIDTags(tags, socket) {
     // Check if RFID exists in the database and update
     const selectQuery = `SELECT RFID, module_barcode FROM [replus_treceability].[dbo].[linking_module_RFID] WHERE RFID = '${RFID}'`;
     const result = await request.query(selectQuery);
-
+if(RFID != 0){
     if (result.recordset.length > 0) {
       const updateQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET module_barcode = '${combinedBarcodes}', v1_live_status = 1, date_time = '${today_date}' WHERE RFID = '${RFID}'`;
       await request.query(updateQuery);
@@ -560,23 +560,56 @@ async function processRFIDTags(tags, socket) {
       await request.query(insertQuery);
       console.log(`Inserted new record for RFID: ${RFID} with barcodes: ${combinedBarcodes}`);
     }
-
+}
     // Send message to frontend
     broadcast({ message: 'Module Barcode and RFID linked successfully' });
     console.log("Module Barcode and RFID linked successfully");
   const result1 = await request.query(selectQuery);
+const Double_module_barcode = await request.query(`
+        WITH RankedRecords AS (
+            SELECT [v1_status], [v1_end_date], 
+                ROW_NUMBER() OVER (PARTITION BY [v1_end_date] ORDER BY [v1_end_date] DESC) AS RowNum
+            FROM [replus_treceability].[dbo].[clw_station_status]
+            WHERE [RFID] = '${RFID}'
+        )
+        SELECT [v1_status], [v1_end_date]
+        FROM RankedRecords
+        WHERE RowNum <= 2
+        ORDER BY [v1_end_date] DESC;
+    `);
 
-      // If result1.recordset is an array and you want to access the first element
-      const record = result1.recordset[0]; // Access the first record
+    // Ensure Double_module_barcode.recordset has at least 2 records before accessing
+    if (Double_module_barcode && Double_module_barcode.recordset && Double_module_barcode.recordset.length >= 2) {
+        const firstRecord = Double_module_barcode.recordset[0];
+        const secondRecord = Double_module_barcode.recordset[1];
 
-      if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {
-    // Write the CycleStartConfirm tag to true for Vision1 for multiple barcodes
-    await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
-      
-    const statusChangeMessage = { tag: 'CycleStartConfirm', RFID: RFID, status: 'changed to true' };
-    socket.write(JSON.stringify(statusChangeMessage));
-    // }   
-      }
+        // Assuming result1 is another query you are performing earlier
+        const record = result1 && result1.recordset && result1.recordset[0]; // Access the first record of result1
+
+        // Check conditions before proceeding
+        if (
+            firstRecord.v1_status !== 'OK' && 
+            secondRecord.v1_status !== 'OK' && 
+            record && 
+            record.module_barcode !== '' && 
+            record.RFID !== '' && 
+            record.RFID !== null
+        ) {
+            // Write the CycleStartConfirm tag to true for Vision1 for multiple barcodes
+            await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
+
+            const statusChangeMessage = {
+                tag: 'CycleStartConfirm',
+                RFID: RFID,
+                status: 'changed to true'
+            };
+
+            socket.write(JSON.stringify(statusChangeMessage));
+            console.log('CycleStartConfirm written for Vision1.');
+        }
+    } else {
+        console.error('Not enough records found for Double_module_barcode.');
+    }
   } catch (error) {
     console.error('Error processing RFID tags for multiple modules:', error.message);
   }
