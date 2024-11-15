@@ -850,6 +850,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
             const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${combinedBarcodes}'`;
             await request.query(updateQuery);
             console.log(`Updated clw_station_status for barcode: ${combinedBarcodes}`);
+            
           } else {
             // Insert a new record if it doesn't exist
             const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${barcode}', '${statusToStore}', '${errorDescription}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
@@ -863,7 +864,9 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated v1_live_status for barcode: ${combinedBarcodes}`);
           }
-
+          
+               await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
+              console.log("Cycle Start Comform Tag false for vision 1 cycle complete ");
           broadcast({ message: `${scannedBarcode1} : OK  ${scannedBarcode2} : OK`});
 
         } else {
@@ -927,6 +930,9 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
               await request.query(insertQuery2);
               console.log(`Inserted new clw_station_status record for barcode: ${scannedBarcode2}`);
 
+             
+              
+
               // update the `v1_live_status` in `linking_module_RFID`
               const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v1_live_status = '0' WHERE module_barcode = '${combinedBarcodes}'`;
               console.log("updateLinkingQuery::", updateLinkingQuery);
@@ -951,7 +957,8 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
               await request.query(updateQuery2);
               console.log(`Updated clw_station_status for barcode: ${scannedBarcode2}`);
 
-            
+               // After completing Vision1 cycle, set to false
+              await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
 
             } else {
               // Insert a new record if it doesn't exist
@@ -963,6 +970,9 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
               await request.query(insertQuery2);
               console.log(`Inserted new clw_station_status record for barcode: ${scannedBarcode2}`);
 
+                 // After completing Vision1 cycle, set to false
+               await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
+
               // update the `v1_live_status` in `linking_module_RFID`
               const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v1_live_status = '0' WHERE module_barcode = '${combinedBarcodes}'`;
               console.log("updateLinkingQuery::", updateLinkingQuery);
@@ -970,6 +980,9 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
               await request.query(updateLinkingQuery);
               console.log(`Updated v1_live_status for barcode: ${combinedBarcodes}`);
             }
+
+               await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
+              console.log("Cycle Start Comform Tag false for vision 1 cycle complete ");
             broadcast({ message: `${scannedBarcode1} : Not Ok  ${scannedBarcode2} : Not Ok  Error : Cell Polarity Is Not Ok`});
 
           }
