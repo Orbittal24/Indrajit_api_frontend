@@ -1142,7 +1142,7 @@ async function processVision2(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status for RFID: ${RFID}`);
             console.log(result.recordset[0])
-            if (result.recordset[0].v1_status === "OK" && RFID != 0 && RFID != 'DA' && (tags.vision2.OKStatus !== true && tags.vision2.NOKStatus !== true)) {
+            if (result.recordset[0].v1_status === "OK" && RFID != 0 && RFID != 'DA' && result.recordset[0].v2_status !== "OK" && (tags.vision2.OKStatus !== true && tags.vision2.NOKStatus !== true)) {
               await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
             }
 
@@ -1366,7 +1366,7 @@ async function processWelding(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated welding_live_status for RFID: ${RFID}`);
 
-            if (result.recordset[0].v2_status === "OK" && RFID != 0 && RFID != "DA" && (tags.welding.OKStatus !== true && tags.welding.NOKStatus !== true)) {
+            if (result.recordset[0].v2_status === "OK" && RFID != 0 && RFID != "DA" && result.recordset[0].welding_status !== "OK" && result.recordset[0].welding_status !== "NOT OK" && (tags.welding.OKStatus !== true && tags.welding.NOKStatus !== true)) {
               // processing is complete, send CycleStartConfirm to true
               await writeCycleStartConfirmwelding(tags.welding.RFID, socket, true);
             }
@@ -1583,7 +1583,7 @@ async function processFpcb(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated fpcb_live_status for RFID: ${RFID}`);
 
-            if (result.recordset[0].welding_status == "OK" && RFID != 0 && RFID != "DA" && (tags.fpcb.OKStatus !== true && tags.fpcb.NOKStatus !== true)) {
+            if (result.recordset[0].welding_status == "OK" && RFID != 0 && RFID != "DA" && result.recordset[0].fpcb_status !== "OK" && (tags.fpcb.OKStatus !== true && tags.fpcb.NOKStatus !== true)) {
               // When processing starts, set it to true
               await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, true);
             }
