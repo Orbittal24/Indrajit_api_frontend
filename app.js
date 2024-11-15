@@ -565,70 +565,16 @@ if(RFID != 0){
     broadcast({ message: 'Module Barcode and RFID linked successfully' });
     console.log("Module Barcode and RFID linked successfully");
   const result1 = await request.query(selectQuery);
- // If result1.recordset is an array and you want to access the first element
-    Double_module_barcode = await request.query(`
-       WITH RankedRecords AS (
-            SELECT [v1_status], [v1_end_date], 
-                ROW_NUMBER() OVER (PARTITION BY [v1_end_date] ORDER BY [v1_end_date] DESC) AS RowNum
-            FROM [replus_treceability].[dbo].[clw_station_status]
-            WHERE [RFID] = '${RFID}'
-        )
-        SELECT [v1_status], [v1_end_date]
-        FROM RankedRecords
-        WHERE RowNum <= 2
-        ORDER BY [v1_end_date] DESC;
-  `);
-
-  // Log the query results to see what was returned
-  console.log("Double_module_barcode recordset:", Double_module_barcode.recordset);
-
-  // If Double_module_barcode is null or doesn't contain enough records, proceed anyway
-  if (!Double_module_barcode.recordset || Double_module_barcode.recordset.length < 1  ) {
-      console.log('Double_module_barcode is null or contains less than 2 records. Proceeding with the logic.');
-
-      // If no valid records, continue with your existing logic
-      // Assuming result1 is another query you are performing earlier
-      const record = result1 && result1.recordset && result1.recordset[0]; // Access the first record of result1
-
-      if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {
+     const record = result1 && result1.recordset && result1.recordset[0];
+      if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null && (tags.vision1.OKStatus !== true && tags.vision1.NOKStatus !== true)) {
           // Write the CycleStartConfirm tag to true for Vision1 for multiple barcodes
           await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
 
-          const statusChangeMessage = {
-              tag: 'CycleStartConfirm',
-              RFID: RFID,
-              status: 'changed to true'
-          };
-
+          const statusChangeMessage = {tag: 'CycleStartConfirm', RFID: RFID, status: 'changed to true'};
           socket.write(JSON.stringify(statusChangeMessage));
           console.log('CycleStartConfirm written for first Vision1.');
       }
-  } else {
-      // If Double_module_barcode has at least 2 records, process them
-      const firstRecord = Double_module_barcode.recordset[0];
-      // const secondRecord = Double_module_barcode.recordset[1];
-
-      // Assuming result1 is another query you are performing earlier
-      const record = result1 && result1.recordset && result1.recordset[0]; // Access the first record of result1
-
-      // Check conditions before proceeding
-      if (firstRecord.v1_status !== 'OK' && record && 
-          record.module_barcode !== '' && 
-          record.RFID !== '' && 
-          record.RFID !== null) {
-          // Write the CycleStartConfirm tag to true for Vision1 for multiple barcodes
-          await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
-
-          const statusChangeMessage = {
-              tag: 'CycleStartConfirm',
-              RFID: RFID,
-              status: 'changed to true'
-          };
-
-          socket.write(JSON.stringify(statusChangeMessage));
-          console.log('CycleStartConfirm written secound for Vision1.');
-      }
-  }
+ 
   } catch (error) {
     console.error('Error processing RFID tags for multiple modules:', error.message);
   }
