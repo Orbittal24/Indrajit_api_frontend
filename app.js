@@ -564,14 +564,19 @@ async function processRFIDTags(tags, socket) {
     // Send message to frontend
     broadcast({ message: 'Module Barcode and RFID linked successfully' });
     console.log("Module Barcode and RFID linked successfully");
+  const result1 = await request.query(selectQuery);
 
+      // If result1.recordset is an array and you want to access the first element
+      const record = result1.recordset[0]; // Access the first record
+
+      if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {
     // Write the CycleStartConfirm tag to true for Vision1 for multiple barcodes
     await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
-
+      
     const statusChangeMessage = { tag: 'CycleStartConfirm', RFID: RFID, status: 'changed to true' };
     socket.write(JSON.stringify(statusChangeMessage));
     // }   
-
+      }
   } catch (error) {
     console.error('Error processing RFID tags for multiple modules:', error.message);
   }
