@@ -583,10 +583,7 @@ if(RFID != 0){
   console.log("Double_module_barcode recordset:", Double_module_barcode.recordset);
 
   // If Double_module_barcode is null or doesn't contain enough records, proceed anyway
-  if (
-    Double_module_barcode == null &&
-      !Double_module_barcode   
-  ) {
+  if (!Double_module_barcode.recordset || Double_module_barcode.recordset.length < 1  ) {
       console.log('Double_module_barcode is null or contains less than 2 records. Proceeding with the logic.');
 
       // If no valid records, continue with your existing logic
