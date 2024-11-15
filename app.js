@@ -568,25 +568,15 @@ if(RFID != 0){
  // If result1.recordset is an array and you want to access the first element
     Double_module_barcode = await request.query(`
        WITH RankedRecords AS (
-    SELECT [v1_status], [v1_end_date], 
-        ROW_NUMBER() OVER (PARTITION BY [v1_end_date] ORDER BY [sr_no] DESC) AS RowNum
-    FROM [replus_treceability].[dbo].[clw_station_status]
-    WHERE [RFID] = '15'
-)
-, FilteredRecords AS (
-    SELECT [v1_status], [v1_end_date]
-    FROM RankedRecords
-    WHERE RowNum <= 2
-)
-SELECT [v1_status], [v1_end_date]
-FROM FilteredRecords
-WHERE [v1_end_date] IN (
-    SELECT [v1_end_date]
-    FROM FilteredRecords
-    GROUP BY [v1_end_date]
-    HAVING COUNT(*) = 2
-)
-ORDER BY [v1_end_date] DESC;
+            SELECT [v1_status], [v1_end_date], 
+                ROW_NUMBER() OVER (PARTITION BY [v1_end_date] ORDER BY [v1_end_date] DESC) AS RowNum
+            FROM [replus_treceability].[dbo].[clw_station_status]
+            WHERE [RFID] = '${RFID}'
+        )
+        SELECT [v1_status], [v1_end_date]
+        FROM RankedRecords
+        WHERE RowNum <= 2
+        ORDER BY [v1_end_date] DESC;
   `);
 
   // Log the query results to see what was returned
