@@ -1269,7 +1269,7 @@ async function processVision2(tags, socket) {
             console.log("Vision 2 Cycle Completed!");
 
             // After completing Vision2 cycle, set it back to false
-            await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
+           // await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
           }
         } else {
           console.error(`No record found for module_barcode: ${barcode.trim()}`);
@@ -1500,7 +1500,7 @@ async function processWelding(tags, socket) {
             console.log("Welding Cycle Completed!");
 
             // After processing completing, set it back to false
-            await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
+            //await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
           }
         } else {
           console.error(`No record found for module_barcode: ${barcode.trim()}`);
@@ -1714,7 +1714,7 @@ async function processFpcb(tags, socket) {
             console.log("FPCB Cycle Completed!");
 
             // After processing completes, set cyclestartconfirm back to false
-            await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
+            //await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
           }
         } else {
           console.error(`No record found for module_barcode: ${trimmedBarcode}`);
