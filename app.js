@@ -472,10 +472,10 @@ async function processRFIDTagsSingle(tags, socket) {
     let singleBarcode = scannedBarcode1;
     console.log("singleBarcode found processRFIDSingle::", singleBarcode)
 
-    // if (!singleBarcode) {
-    //   console.error('Scanned barcode is undefined. Unable to link RFID.');
-    //   return;
-    // }
+    if (!singleBarcode) {
+         console.error('Scanned barcode is undefined. Unable to link RFID.');
+      return;
+    }
 
     // Insert/update in linking_module_RFID table when status is false
     if (!tags.vision1.OKStatus || !tags.vision1.NOKStatus) {
@@ -496,6 +496,7 @@ async function processRFIDTagsSingle(tags, socket) {
 
       // If result1.recordset is an array and you want to access the first element
       const record = result1.recordset[0]; // Access the first record
+       
 
       if (record && record.module_barcode !== '' && record.RFID !== '' && record.RFID !== null) {
         console.log(record);
@@ -505,10 +506,25 @@ async function processRFIDTagsSingle(tags, socket) {
 
         // Write the CycleStartConfirm tag to true for Vision1
         await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
+        const insertQuery = `
+        IF NOT EXISTS (
+            SELECT 1 
+            FROM [replus_treceability].[dbo].[clw_station_status] 
+            WHERE module_barcode = '${singleBarcode}'
+        )
+        BEGIN
+            INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, RFID, v1_start_date)
+            VALUES ('${singleBarcode}', '${RFID}', GETDATE())
+        END
+    `;
+    await request.query(insertQuery);
+
+        console.log(insertQuery);
       } else {
         console.log("Module Barcode and RFID not linked!!!");
       }
     }
+
 
     // If OKStatus or NOKStatus is true, insert/update in clw_station_status table
     console.log(tags.vision1.OKStatus, tags.vision1.NOKStatus);
@@ -573,6 +589,34 @@ if(RFID != 0){
           const statusChangeMessage = {tag: 'CycleStartConfirm', RFID: RFID, status: 'changed to true'};
           socket.write(JSON.stringify(statusChangeMessage));
           console.log('CycleStartConfirm written for first Vision1.');
+
+          const insertQuery1 = `
+          IF NOT EXISTS (
+              SELECT 1 
+              FROM [replus_treceability].[dbo].[clw_station_status] 
+              WHERE module_barcode = '${scannedBarcode1}'
+          )
+          BEGIN
+              INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, RFID, v1_start_date)
+              VALUES ('${scannedBarcode1}', '${RFID}', GETDATE())
+          END
+      `;
+      await request.query(insertQuery1);
+
+
+      const insertQuery2 = `
+      IF NOT EXISTS (
+          SELECT 1 
+          FROM [replus_treceability].[dbo].[clw_station_status] 
+          WHERE module_barcode = '${scannedBarcode2}'
+      )
+      BEGIN
+          INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, RFID, v1_start_date)
+          VALUES ('${scannedBarcode2}', '${RFID}', GETDATE())
+      END
+  `;
+  await request.query(insertQuery2);
+  
       }
  
   } catch (error) {
@@ -674,7 +718,7 @@ async function processVision1Single(singleBarcode, tags, socket) {
   const month = ("0" + (curdate.getMonth() + 1)).slice(-2);
   const day = ("0" + curdate.getDate()).slice(-2);
   const today_date = `${yr}-${month}-${day} ${curdate.getHours()}:${curdate.getMinutes()}:${curdate.getSeconds()}`;
-  // console.log("today_date Vision1Single::", today_date);
+  console.log("End Date  Vision1Single::", today_date);
 
   console.log(`Processing Vision1 for single barcode: ${singleBarcode}`);
 
@@ -708,13 +752,15 @@ async function processVision1Single(singleBarcode, tags, socket) {
       const dbDate = dateResult.recordset[0].date_time;
       const globalFormattedDateTime = formatDateTime(dbDate);
 
+      // v1_start_date = '${globalFormattedDateTime}', 
+
       // Query to check if the module already exists in clw_station_status
       const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${singleBarcode}'`;
       const statusResult = await request.query(selectQuery);
 
       if (statusResult.recordset.length > 0) {
         // Update the existing record
-        const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${singleBarcode}'`;
+        const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${errorDescription}', RFID = '${RFID}',v1_end_date = '${today_date}' WHERE module_barcode = '${singleBarcode}'`;
         await request.query(updateQuery);
 
         // processing is complete, send CycleStartConfirm to false for Vision1
@@ -845,18 +891,25 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
         // Check if the module already exists in `clw_station_status`
         const statusCheckQuery = `SELECT module_barcode FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${barcode}'`;
         const statusResult = await request.query(statusCheckQuery);
+       
+
 
         if (statusToStore == 'OK') {
 
           if (statusResult.recordset.length > 0) {
             // Update the existing record
-            const updateQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${combinedBarcodes}'`;
-            await request.query(updateQuery);
-            console.log(`Updated clw_station_status for barcode: ${combinedBarcodes}`);
+            const updateQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = 'null', RFID = '${RFID}',  v1_end_date = '${today_date}' WHERE module_barcode = '${barcode}'`;
+            await request.query(updateQuery1);
+
+            // const updateQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = '${statusToStore}', v1_error = '${errorDescription}', RFID = '${RFID}',  v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode2}'`;
+            // await request.query(updateQuery2);
+
+            console.log(updateQuery1);
+            console.log(`Updated clw_station_status for barcode: ${barcode}`);
             
           } else {
             // Insert a new record if it doesn't exist
-            const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${barcode}', '${statusToStore}', '${errorDescription}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
+            const insertQuery = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID,  v1_end_date) VALUES ('${barcode}', '${statusToStore}', 'null', '${RFID}','${today_date}')`;
             await request.query(insertQuery);
             console.log(`Inserted new clw_station_status record for barcode: ${combinedBarcodes}`);
 
@@ -877,11 +930,11 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
 
             if (statusResult.recordset.length > 0) {
               // Update the existing record
-              const updateQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode1}'`;
+              const updateQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'OK', v1_error = 'null', RFID = '${RFID}',  v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode1}'`;
               await request.query(updateQuery1);
               console.log(`Updated clw_station_status for barcode: ${scannedBarcode1}`);
 
-              const updateQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'NOT OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode2}'`;
+              const updateQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'NOT OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode2}'`;
               await request.query(updateQuery2);
               console.log(`Updated clw_station_status for barcode: ${scannedBarcode2}`);
 
@@ -889,7 +942,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
 
             } else {
               // Insert a new record if it doesn't exist
-              const insertQuery1 = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${scannedBarcode1}', 'OK', '${errorDescription}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
+              const insertQuery1 = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${scannedBarcode1}', 'OK', 'null', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
               await request.query(insertQuery1);
               console.log(`Inserted new clw_station_status record for barcode: ${scannedBarcode1}`);
 
@@ -913,11 +966,11 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
 
             if (statusResult.recordset.length > 0) {
               // Update the existing record
-              const updateQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'NOT OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode1}'`;
+              const updateQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'NOT OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode1}'`;
               await request.query(updateQuery1);
               console.log(`Updated clw_station_status for barcode: ${scannedBarcode1}`);
 
-              const updateQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode2}'`;
+              const updateQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'OK', v1_error = 'null', RFID = '${RFID}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode2}'`;
               await request.query(updateQuery2);
               console.log(`Updated clw_station_status for barcode: ${scannedBarcode2}`);
 
@@ -952,11 +1005,11 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
 
             if (statusResult.recordset.length > 0) {
               // Update the existing record
-              const updateQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'NOT OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode1}'`;
+              const updateQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'NOT OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode1}'`;
               await request.query(updateQuery1);
               console.log(`Updated clw_station_status for barcode: ${scannedBarcode1}`);
 
-              const updateQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'NOT OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_start_date = '${globalFormattedDateTime}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode2}'`;
+              const updateQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v1_status = 'NOT OK', v1_error = '${errorDescription}', RFID = '${RFID}', v1_end_date = '${today_date}' WHERE module_barcode = '${scannedBarcode2}'`;
               await request.query(updateQuery2);
               console.log(`Updated clw_station_status for barcode: ${scannedBarcode2}`);
 
@@ -965,11 +1018,11 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
 
             } else {
               // Insert a new record if it doesn't exist
-              const insertQuery1 = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${scannedBarcode1}', 'NOT OK', '${errorDescription}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
+              const insertQuery1 = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_end_date) VALUES ('${scannedBarcode1}', 'NOT OK', '${errorDescription}', '${RFID}','${today_date}')`;
               await request.query(insertQuery1);
               console.log(`Inserted new clw_station_status record for barcode: ${scannedBarcode1}`);
 
-              const insertQuery2 = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_start_date, v1_end_date) VALUES ('${scannedBarcode2}', 'NOT OK', '${errorDescription}', '${RFID}', '${globalFormattedDateTime}', '${today_date}')`;
+              const insertQuery2 = `INSERT INTO [replus_treceability].[dbo].[clw_station_status] (module_barcode, v1_status, v1_error, RFID, v1_end_date) VALUES ('${scannedBarcode2}', 'NOT OK', '${errorDescription}', '${RFID}','${today_date}')`;
               await request.query(insertQuery2);
               console.log(`Inserted new clw_station_status record for barcode: ${scannedBarcode2}`);
 
@@ -1103,8 +1156,6 @@ async function processVision2(tags, socket) {
 
     console.log("Vision Double barcodesString", Double_barcode);
 
-
-   
     let moduleBarcode = null;
 
     if (dateResult.recordset.length > 0) {
@@ -1144,8 +1195,12 @@ async function processVision2(tags, socket) {
             console.log(result.recordset[0])
             if (result.recordset[0].v1_status === "OK" && RFID != 0 && RFID != 'DA' && result.recordset[0].v2_status !== "OK" && (tags.vision2.OKStatus !== true && tags.vision2.NOKStatus !== true)) {
               await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
-            }
 
+
+              const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_start_date =  GETDATE()  WHERE module_barcode = '${barcode}'`;
+                await request.query(updateClwStationQuery1);
+
+            }
 
           }
 
@@ -1167,7 +1222,7 @@ async function processVision2(tags, socket) {
             /*************************************************************/
             if (statusToStore === "OK") {
 
-              const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${statusToStore}', v2_error = '${errorDescription || v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
+              const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = '${statusToStore}', v2_error = '${errorDescription || v2Error}', v2_end_date = '${today_date}' WHERE module_barcode = '${barcode.trim()}'`;
               await request.query(updateClwStationQuery);
 
               await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
@@ -1179,10 +1234,10 @@ async function processVision2(tags, socket) {
 
               if (ModuleStatus == 42) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'OK', v2_error = '${errorDescription || v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'OK', v2_error = 'null', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'NOT OK', v2_error = '${errorDescription || v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'NOT OK', v2_error = '${errorDescription || v2Error}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                 await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
@@ -1193,10 +1248,10 @@ async function processVision2(tags, socket) {
               }
               else if (ModuleStatus == 41) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'NOT OK', v2_error = '${errorDescription || v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'NOT OK', v2_error = '${errorDescription || v2Error}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'OK', v2_error = '${errorDescription || v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'OK', v2_error = 'null', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                 await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
@@ -1207,10 +1262,10 @@ async function processVision2(tags, socket) {
               }
               else if (ModuleStatus == 43) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'NOT OK', v2_error = '${errorDescription || v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'NOT OK', v2_error = '${errorDescription || v2Error}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'NOT OK', v2_error = '${errorDescription || v2Error}', v2_start_date = '${globalFormattedDateTime}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_status = 'NOT OK', v2_error = '${errorDescription || v2Error}', v2_end_date = '${today_date}' WHERE module_barcode = '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                 await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
@@ -1269,7 +1324,7 @@ async function processVision2(tags, socket) {
             console.log("Vision 2 Cycle Completed!");
 
             // After completing Vision2 cycle, set it back to false
-            await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
+           // await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, false);
           }
         } else {
           console.error(`No record found for module_barcode: ${barcode.trim()}`);
@@ -1369,6 +1424,12 @@ async function processWelding(tags, socket) {
             if (result.recordset[0].v2_status === "OK" && RFID != 0 && RFID != "DA" && result.recordset[0].welding_status !== "OK" && result.recordset[0].welding_status !== "NOT OK" && (tags.welding.OKStatus !== true && tags.welding.NOKStatus !== true)) {
               // processing is complete, send CycleStartConfirm to true
               await writeCycleStartConfirmwelding(tags.welding.RFID, socket, true);
+
+              const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_start_date = GETDATE() WHERE module_barcode = '${barcode}'`;
+                await request.query(updateClwStationQuery1);
+
+                console.log("quey welding start date update ",updateClwStationQuery1);
+
             }
           }
 
@@ -1398,7 +1459,7 @@ async function processWelding(tags, socket) {
 
 
             if (statusToStore === "OK") {
-              const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${statusToStore}', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}',  Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${barcode.trim()}'`;
+              const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = '${statusToStore}', welding_error = '${errorDescription}', welding_end_date = '${today_date}',  Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${barcode.trim()}'`;
 
               await request.query(updateClwStationQuery);
               console.log(`Updated Welding status for RFID: ${RFID}`);
@@ -1410,10 +1471,10 @@ async function processWelding(tags, socket) {
 
               if (ModuleStatus == 42) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}',  Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'OK', welding_error = 'null', welding_end_date = '${today_date}',  Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
@@ -1424,10 +1485,10 @@ async function processWelding(tags, socket) {
               }
               else if (ModuleStatus == 41) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'OK', welding_error = 'null', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
@@ -1438,10 +1499,10 @@ async function processWelding(tags, socket) {
               }
               else if (ModuleStatus == 43) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_end_date = '${today_date}', Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_start_date = '${globalFormattedDateTime}', welding_end_date = '${today_date}',  Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_status = 'NOT OK', welding_error = '${errorDescription}', welding_end_date = '${today_date}',  Robot_Welding_Core_Power = '${WeldingCorePower}', Robot_Welding_Radius = '${WeldingRadius}', Robot_Welding_Ring_Power = '${WeldingRingPower}', Robot_Welding_Speed = '${WeldingSpeed}' WHERE module_barcode = '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
@@ -1586,6 +1647,10 @@ async function processFpcb(tags, socket) {
             if (result.recordset[0].welding_status == "OK" && RFID != 0 && RFID != "DA" && result.recordset[0].fpcb_status !== "OK" && (tags.fpcb.OKStatus !== true && tags.fpcb.NOKStatus !== true)) {
               // When processing starts, set it to true
               await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, true);
+
+              const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_start_date = GETDATE() WHERE module_barcode = '${barcode}'`;
+              await request.query(updateClwStationQuery1);
+
             }
           }
 
@@ -1613,7 +1678,7 @@ async function processFpcb(tags, socket) {
 
             
             if (statusToStore === "OK") {
-              const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${statusToStore}', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '2030', FPCB_Welding_Radius = '4.5', FPCB_Welding_Speed = '6' WHERE module_barcode = '${trimmedBarcode}'`;
+              const updateClwStationQuery = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = '${statusToStore}', fpcb_error = '${errorDescription}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode = '${trimmedBarcode}'`;
 
               await request.query(updateClwStationQuery);
               console.log(`Updated FPCB status for RFID: ${RFID}`);
@@ -1626,10 +1691,10 @@ async function processFpcb(tags, socket) {
 
               if (ModuleStatus == 42) {
 
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'OK', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '2030', FPCB_Welding_Radius = '4.5', FPCB_Welding_Speed = '6' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'OK', fpcb_error = 'null', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '2030', FPCB_Welding_Radius = '4.5', FPCB_Welding_Speed = '6' WHERE module_barcode =  '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode =  '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
@@ -1641,10 +1706,10 @@ async function processFpcb(tags, socket) {
               else if (ModuleStatus == 41) {
 
                
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '2030', FPCB_Welding_Radius = '4.5', FPCB_Welding_Speed = '6' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'OK', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '2030', FPCB_Welding_Radius = '4.5', FPCB_Welding_Speed = '6' WHERE module_barcode =  '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'OK', fpcb_error = 'null', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode =  '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
   
                await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
@@ -1656,10 +1721,10 @@ async function processFpcb(tags, socket) {
               else if (ModuleStatus == 43) {
 
                
-                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '2030', FPCB_Welding_Radius = '4.5', FPCB_Welding_Speed = '6' WHERE module_barcode = '${module_barcode1}'`;
+                const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
-                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_start_date = '${globalFormattedDateTime}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '2030', FPCB_Welding_Radius = '4.5', FPCB_Welding_Speed = '6' WHERE module_barcode =  '${module_barcode2}'`;
+                const updateClwStationQuery2 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode =  '${module_barcode2}'`;
                 await request.query(updateClwStationQuery2);
                await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
                 console.log(`Updated Vision 2 status for RFID: ${RFID}`);
