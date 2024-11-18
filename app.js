@@ -15,15 +15,15 @@ function broadcast(message) {
 
 // Database connection config
 const dbConfig = {
-  user: "admin2",
-   password: "reset@123",
-   server: "REP-TRACE",
-   database: "replus_treceability",
-   options: {
-     encrypt: false,
-     trustServerCertificate: true,
-   },
- };
+  user: "admin1",
+  password: "admin1",
+  server: "DESKTOP-RREMJUE",
+  database: "replus_treceability",
+  options: {
+    encrypt: false,
+    trustServerCertificate: true,
+  },
+};
 
 const mainPool = new sql.ConnectionPool(dbConfig);
 const mainPoolConnect = mainPool.connect();
@@ -508,8 +508,8 @@ async function processRFIDTagsSingle(tags, socket) {
         await writeCycleStartConfirm(tags.vision1.RFID, socket, true);
         const insertQuery = `
         IF NOT EXISTS (
-            SELECT 1 
-            FROM [replus_treceability].[dbo].[clw_station_status] 
+            SELECT 1
+            FROM [replus_treceability].[dbo].[clw_station_status]
             WHERE module_barcode = '${singleBarcode}'
         )
         BEGIN
@@ -540,7 +540,7 @@ async function processRFIDTagsSingle(tags, socket) {
   }
 }
 
-// Function to process RFID tags and link to a multiple barcode 
+// Function to process RFID tags and link to a multiple barcode
 async function processRFIDTags(tags, socket) {
 
   const curdate = new Date();
@@ -592,8 +592,8 @@ async function processRFIDTags(tags, socket) {
 
       const insertQuery1 = `
           IF NOT EXISTS (
-              SELECT 1 
-              FROM [replus_treceability].[dbo].[clw_station_status] 
+              SELECT 1
+              FROM [replus_treceability].[dbo].[clw_station_status]
               WHERE module_barcode = '${scannedBarcode1}'
           )
           BEGIN
@@ -606,8 +606,8 @@ async function processRFIDTags(tags, socket) {
 
       const insertQuery2 = `
       IF NOT EXISTS (
-          SELECT 1 
-          FROM [replus_treceability].[dbo].[clw_station_status] 
+          SELECT 1
+          FROM [replus_treceability].[dbo].[clw_station_status]
           WHERE module_barcode = '${scannedBarcode2}'
       )
       BEGIN
@@ -710,7 +710,7 @@ async function writeCycleStartConfirmfpcb(RFID, socket, value) {
   }
 }
 
-// Function to process Vision 1 for single module 
+// Function to process Vision 1 for single module
 async function processVision1Single(singleBarcode, tags, socket) {
 
   const curdate = new Date();
@@ -752,7 +752,7 @@ async function processVision1Single(singleBarcode, tags, socket) {
       const dbDate = dateResult.recordset[0].date_time;
       const globalFormattedDateTime = formatDateTime(dbDate);
 
-      // v1_start_date = '${globalFormattedDateTime}', 
+      // v1_start_date = '${globalFormattedDateTime}',
 
       // Query to check if the module already exists in clw_station_status
       const selectQuery = `SELECT * FROM [replus_treceability].[dbo].[clw_station_status] WHERE module_barcode = '${singleBarcode}'`;
@@ -784,27 +784,47 @@ async function processVision1Single(singleBarcode, tags, socket) {
       await request.query(updateLinkingQuery);
       console.log(`Updated v1_live_status`);
 
-      /******************** indrajeet code start **************************/
-      const combinedResult1 = await mainPool.request().query(`
-      WITH LatestRow AS (SELECT TOP 1 sr_no FROM [dbo].[clw_station_status] WHERE module_barcode = '${singleBarcode}' ORDER BY sr_no DESC)
-      SELECT TOP 1 v1_end_date FROM [dbo].[clw_station_status] WHERE  sr_no < (SELECT sr_no FROM LatestRow) AND CONVERT(date, v1_end_date) = CONVERT(date, GETDATE()) ORDER BY sr_no DESC`);
+      /******************** single module v1 time differance **************************/
+      // Fetch previous v1_start_date and v1_end_date for the given barcode
+      const result = await mainPool.request().query(`SELECT TOP 1 v1_start_date, v1_end_date
+            FROM [dbo].[clw_station_status]
+            WHERE module_barcode = '${singleBarcode.trim()}'
+            ORDER BY sr_no DESC; `);
+      // Step 2: Check if data is found
+      if (result.recordset.length > 0) {
+        console.log("v1 diff", result.recordset)
+        const previous_v1_start_date = result.recordset[0].v1_start_date;
+        const previous_v1_end_date = result.recordset[0].v1_end_date;
 
-      let previous_v1_end_date = null;
-      if (combinedResult1.recordset.length > 0) {
-        previous_v1_end_date = combinedResult1.recordset[0].v1_end_date;
-      }
-      // console.log("vision 1 datee ::", previous_v1_end_date);
+        console.log("Previous v1 start date:", previous_v1_start_date);
+        console.log("Previous v1 end date:", previous_v1_end_date);
 
-      if (previous_v1_end_date != null) {
-        globalFormattedDateTime1 = formatDateTime(previous_v1_end_date);
+        // Step 3: Validate the dates
+        if (previous_v1_start_date && previous_v1_end_date) {
+          console.log("v1 diff", previous_v1_start_date, previous_v1_end_date)
+          const globalFormattedStartDateTime = formatDateTime(previous_v1_start_date);
+          const globalFormattedEndDateTime = formatDateTime(previous_v1_end_date);
 
-        // console.log("globalFormattedDateTime1::", globalFormattedDateTime1);
+          // Check if both dates are properly formatted
+          if (globalFormattedStartDateTime && globalFormattedEndDateTime) {
+            // Step 4: Update the v1_difference in the database
+            console.log("v1 diff inseted")
+            await mainPool.request().query(`
+              UPDATE [replus_treceability].[dbo].[clw_station_status]
+              SET v1_difference = DATEDIFF(MINUTE, '${globalFormattedStartDateTime}', '${globalFormattedEndDateTime}')
+              WHERE module_barcode = '${singleBarcode.trim()}'
+            `);
 
-        if (globalFormattedDateTime1) {
-          await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET  v1_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${singleBarcode}'`);
+            console.log(`v1_difference updated successfully for barcode: ${singleBarcode.trim()}`);
+          } else {
+            console.log(`Invalid date formatting for v1_start_date or v1_end_date for module_barcode: ${singleBarcode.trim()}`);
+          }
         } else {
-          console.log(`No previous record found for module_barcode: ${singleBarcode}`);
+          console.log(`No valid previous v1_start_date or v1_end_date for module_barcode: ${singleBarcode.trim()}`);
         }
+        // } else {
+        //   console.log(`No previous record found for module_barcode: ${singleBarcode.trim()}`);
+        // }
 
         /******************** To send NOT OK Status in rework table ****************************/
         if (statusToStore === 'NOT OK') {
@@ -828,21 +848,18 @@ async function processVision1Single(singleBarcode, tags, socket) {
         });
       }
       console.log("Vision 1 Cycle Completed!");
-
-
       // processing is complete, send CycleStartConfirm to false for Vision1
       // await writeCycleStartConfirm(tags.vision1.RFID, socket, false);
 
     } else {
       console.error(`No record found for RFID: ${RFID}`);
     }
-
   } catch (error) {
     console.error('Error processing Vision1 for single module:', error.message);
   }
 }
 
-// Function to process Vision 1 for multiple module 
+// Function to process Vision 1 for multiple module
 async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
 
   const curdate = new Date();
@@ -987,9 +1004,6 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
               await request.query(insertQuery2);
               console.log(`Inserted new clw_station_status record for barcode: ${scannedBarcode2}`);
 
-
-
-
               // update the `v1_live_status` in `linking_module_RFID`
               const updateLinkingQuery = `UPDATE [replus_treceability].[dbo].[linking_module_RFID] SET v1_live_status = '0' WHERE module_barcode = '${combinedBarcodes}'`;
               console.log("updateLinkingQuery::", updateLinkingQuery);
@@ -997,10 +1011,8 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
               await request.query(updateLinkingQuery);
               console.log(`Updated v1_live_status for barcode: ${combinedBarcodes}`);
 
-
             }
 
-            
             if (statusToStore === 'NOT OK' && scannedBarcode1 == barcode) {
               await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description,today_date) VALUES ('${scannedBarcode1}', 'Vision 1','${errorDescription}', GETDATE())`);
               console.log("Data inserted into replus_NOTOK_history_details for Vision 1");
@@ -1045,7 +1057,7 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
               console.log(`Updated v1_live_status for barcode: ${combinedBarcodes}`);
             }
 
-            if (statusToStore === 'NOT OK' ) {
+            if (statusToStore === 'NOT OK') {
               await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description,today_date) VALUES ('${barcode}', 'Vision 1','${errorDescription}', GETDATE())`);
               console.log("Data inserted into replus_NOTOK_history_details for Vision 1");
             }
@@ -1055,8 +1067,6 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
             //   console.log("Data inserted into replus_NOTOK_history_details for Vision 1");
             // }
 
-
-           
             broadcast({ message: `${scannedBarcode1} : Not Ok  ${scannedBarcode2} : Not Ok  Error : Cell Polarity Is Not Ok` });
 
           }
@@ -1067,38 +1077,56 @@ async function processVision1(scannedBarcode1, scannedBarcode2, tags, socket) {
           console.log("Cycle Start Comform Tag false for vision 1 cycle complete ");
         }
 
+        /******************** v1 time differance **************************/
+        // Fetch previous v1_start_date and v1_end_date for the given barcode
+        const result = await mainPool.request().query(`SELECT TOP 1 v1_start_date, v1_end_date
+          FROM [dbo].[clw_station_status]
+          WHERE module_barcode = '${barcode.trim()}'
+          ORDER BY sr_no DESC; `);
+        // Step 2: Check if data is found
+        if (result.recordset.length > 0) {
+          console.log("v1 diff", result.recordset)
+          const previous_v1_start_date = result.recordset[0].v1_start_date;
+          const previous_v1_end_date = result.recordset[0].v1_end_date;
 
+          console.log("Previous v1 start date:", previous_v1_start_date);
+          console.log("Previous v1 end date:", previous_v1_end_date);
 
-        /******************** indrajeet code start **************************/
-        const combinedResult1 = await mainPool.request().query(`
-        WITH LatestRow AS (SELECT TOP 1 sr_no FROM [dbo].[clw_station_status] WHERE module_barcode = '${barcode}' ORDER BY sr_no DESC)
-        SELECT TOP 1 v1_end_date FROM [dbo].[clw_station_status] WHERE  sr_no < (SELECT sr_no FROM LatestRow) AND CONVERT(date, v1_end_date) = CONVERT(date, GETDATE()) ORDER BY sr_no DESC`);
+          // Step 3: Validate the dates
+          if (previous_v1_start_date && previous_v1_end_date) {
+            console.log("v1 diff", previous_v1_start_date, previous_v1_end_date)
+            const globalFormattedStartDateTime = formatDateTime(previous_v1_start_date);
+            const globalFormattedEndDateTime = formatDateTime(previous_v1_end_date);
 
-        let previous_v1_end_date = null;
-        if (combinedResult1.recordset.length > 0) {
-          previous_v1_end_date = combinedResult1.recordset[0].v1_end_date;
-        }
-        console.log("vision 1 datee ::", previous_v1_end_date);
+            // Check if both dates are properly formatted
+            if (globalFormattedStartDateTime && globalFormattedEndDateTime) {
+              // Step 4: Update the v1_difference in the database
+              console.log("v1 diff inseted")
+              await mainPool.request().query(`
+            UPDATE [replus_treceability].[dbo].[clw_station_status]
+            SET v1_difference = DATEDIFF(MINUTE, '${globalFormattedStartDateTime}', '${globalFormattedEndDateTime}')
+            WHERE module_barcode = '${barcode.trim()}'
+          `);
 
-        if (previous_v1_end_date != null) {
-          globalFormattedDateTime1 = formatDateTime(previous_v1_end_date);
-
-          console.log("globalFormattedDateTime1::", globalFormattedDateTime1);
-
-          if (globalFormattedDateTime1) {
-            await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET  v1_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${barcode}'`);
+              console.log(`v1_difference updated successfully for barcode: ${barcode.trim()}`);
+            } else {
+              console.log(`Invalid date formatting for v1_start_date or v1_end_date for module_barcode: ${barcode.trim()}`);
+            }
           } else {
-            console.log(`No previous record found for module_barcode: ${barcode}`);
+            console.log(`No valid previous v1_start_date or v1_end_date for module_barcode: ${barcode.trim()}`);
           }
-
-          /******************** To send NOT OK Status in rework table ****************************/
-          // if (statusToStore === 'NOT OK') {
-          //   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, remark) VALUES ('${barcode}', 'Vision 1', '${errorDescription}')`);
-          //   console.log("Data inserted into replus_NOTOK_history_details for Vision 1");
-          // }
         } else {
-          console.log(`No previous record found for module_barcode: ${barcode}`);
+          console.log(`No previous record found for module_barcode: ${barcode.trim()}`);
         }
+
+        /******************** To send NOT OK Status in rework table ****************************/
+        // if (statusToStore === 'NOT OK') {
+        //   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, remark) VALUES ('${barcode}', 'Vision 1', '${errorDescription}')`);
+        //   console.log("Data inserted into replus_NOTOK_history_details for Vision 1");
+        // }
+        // } else {
+        //   console.log(`No previous record found for module_barcode: ${barcode}`);
+        // }
         /******************** indrajeet code end **************************/
       }
 
@@ -1213,7 +1241,6 @@ async function processVision2(tags, socket) {
             if (result.recordset[0].v1_status === "OK" && RFID != 0 && RFID != 'DA' && result.recordset[0].v2_status !== "OK" && (tags.vision2.OKStatus !== true && tags.vision2.NOKStatus !== true)) {
               await writeCycleStartConfirmvision2(tags.vision2.RFID, socket, true);
 
-
               const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET v2_start_date =  GETDATE()  WHERE module_barcode = '${barcode}'`;
               await request.query(updateClwStationQuery1);
 
@@ -1313,36 +1340,52 @@ async function processVision2(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated v2_live_status`);
 
-            /******************** indrajeet code start **************************/
-            const combinedResult1 = await mainPool.request().query(`
-              WITH LatestRow AS (SELECT TOP 1 sr_no FROM [dbo].[clw_station_status] WHERE module_barcode = '${barcode.trim()}' ORDER BY sr_no DESC)
-              SELECT TOP 1 v2_end_date FROM [dbo].[clw_station_status] WHERE  sr_no < (SELECT sr_no FROM LatestRow) AND CONVERT(date, v2_end_date) = CONVERT(date, GETDATE()) ORDER BY sr_no DESC`);
-
-            let previous_v2_end_date = null;
-            if (combinedResult1.recordset.length > 0) {
-              previous_v2_end_date = combinedResult1.recordset[0].v2_end_date;
-            }
-            console.log("vision 2 datee ::", previous_v2_end_date);
-
-            if (previous_v2_end_date != null) {
-              globalFormattedDateTime1 = formatDateTime(previous_v2_end_date);
-
-              console.log("globalFormattedDateTime1::", globalFormattedDateTime1);
-
-              if (globalFormattedDateTime1) {
-                await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET  v2_difference =  DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}')  WHERE module_barcode = '${barcode.trim()}'`);
+            /******************** V2 time difference  **************************/
+            const result = await mainPool.request().query(`
+              SELECT TOP 1 v2_start_date, v2_end_date
+              FROM [dbo].[clw_station_status]
+              WHERE module_barcode = '${barcode.trim()}'
+              ORDER BY sr_no DESC;
+            `);
+           
+            // Step 2: Check if data is found
+            if (result.recordset.length > 0) {
+              const v2StartDate = result.recordset[0].v2_start_date;
+              const v2EndDate = result.recordset[0].v2_end_date;
+           
+              // Step 3: Validate the dates
+              if (v2StartDate && v2EndDate) {
+                const formattedV2Start = formatDateTime(v2StartDate);
+                const formattedV2End = formatDateTime(v2EndDate);
+           
+                // Check if both dates are properly formatted
+                if (formattedV2Start && formattedV2End) {
+                  // Step 4: Update the v2_difference in the database
+                  await mainPool.request().query(`
+                    UPDATE [replus_treceability].[dbo].[clw_station_status]
+                    SET v2_difference = DATEDIFF(MINUTE, '${formattedV2Start}', '${formattedV2End}')
+                    WHERE module_barcode = '${barcode.trim()}'
+                  `);
+           
+                  console.log(`v2_difference updated successfully for barcode: ${barcode.trim()}`);
+                } else {
+                  console.log(`Invalid date formatting for v2_start_date or v2_end_date for module_barcode: ${barcode.trim()}`);
+                }
               } else {
-                console.log(`No previous record found for module_barcode: ${barcode.trim()}`);
+                console.log(`No valid v2_start_date or v2_end_date for module_barcode: ${barcode.trim()}`);
               }
-
-              /******************** To send NOT OK Status in rework table ****************************/
-              // if (statusToStore === 'NOT OK') {
-              //   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, remark) VALUES ('${barcode.trim()}', 'Vision 2', '${errorDescription || ''}')`);
-              //   console.log("Data inserted into replus_NOTOK_history_details for Vision 2");
-              // }
             } else {
-              console.log(`No previous record found for module_barcode: ${barcode.trim()}`);
+              console.log(`No records found for module_barcode: ${barcode.trim()} and fields v2_start_date, v2_end_date`);
             }
+           
+            /******************** To send NOT OK Status in rework table ****************************/
+            // if (statusToStore === 'NOT OK') {
+            //   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, remark) VALUES ('${barcode.trim()}', 'Vision 2', '${errorDescription || ''}')`);
+            //   console.log("Data inserted into replus_NOTOK_history_details for Vision 2");
+            // }
+            // } else {
+            //   console.log(`No previous record found for module_barcode: ${barcode.trim()}`);
+            // }
             /******************** indrajeet code end **************************/
 
             // Notify frontend with status and error if applicable
@@ -1370,7 +1413,7 @@ async function processVision2(tags, socket) {
 
 
 
-// Function to process Welding 
+// Function to process Welding
 async function processWelding(tags, socket) {
 
   const curdate = new Date();
@@ -1412,11 +1455,7 @@ async function processWelding(tags, socket) {
 
     console.log("Welding Double barcodesString", Double_barcode);
 
-
-
     let moduleBarcode = null;
-
-
 
     if (dateResult.recordset.length > 0) {
       const dbDate = dateResult.recordset[0].date_time;
@@ -1529,7 +1568,7 @@ async function processWelding(tags, socket) {
                 await writeCycleStartConfirmwelding(tags.welding.RFID, socket, false);
                 console.log(`Updated welding status for RFID: ${RFID}`);
 
-                
+
                 if (statusToStore === 'NOT OK' && module_barcode1.trim() == barcode.trim()) {
                   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description,today_date) VALUES ('${module_barcode1}', 'welding', '${errorDescription || ''}, GETDATE()')`);
                   console.log("Data inserted into replus_NOTOK_history_details for welding");
@@ -1568,35 +1607,62 @@ async function processWelding(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated welding_live_status`);
 
-            /******************** indrajeet code start **************************/
-            const combinedResult1 = await mainPool.request().query(`
-              WITH LatestRow AS (SELECT TOP 1 sr_no FROM [dbo].[clw_station_status] WHERE module_barcode = '${barcode.trim()}' ORDER BY sr_no DESC)
-              SELECT TOP 1 welding_end_date FROM [dbo].[clw_station_status] WHERE sr_no < (SELECT sr_no FROM LatestRow) AND CONVERT(date, welding_end_date) = CONVERT(date, GETDATE()) ORDER BY sr_no DESC`);
-
-            let previous_welding_end_date = null;
-            if (combinedResult1.recordset.length > 0) {
-              previous_welding_end_date = combinedResult1.recordset[0].welding_end_date;
-            }
-            console.log("previous_welding_end_date::", previous_welding_end_date);
-
-            if (previous_welding_end_date != null) {
-              const globalFormattedDateTime1 = formatDateTime(previous_welding_end_date);
-              console.log("globalFormattedDateTime1::", globalFormattedDateTime1);
-
-              if (globalFormattedDateTime1) {
-                await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET welding_difference = DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}') WHERE module_barcode = '${barcode.trim()}'`);
+            /******************** welding time difference **************************/
+            // Fetch previous welding start and end dates for the given barcode
+            const result = await mainPool.request().query(`
+              SELECT TOP 1 welding_start_date, welding_end_date
+              FROM [dbo].[clw_station_status]
+              WHERE module_barcode = '${barcode.trim()}'
+              ORDER BY sr_no DESC;
+            `);
+           
+            // Step 2: Check if data is found
+            if (result.recordset.length > 0) {
+              console.log("Welding data:", result.recordset);
+           
+              const weldingStartDate = result.recordset[0].welding_start_date;
+              const weldingEndDate = result.recordset[0].welding_end_date;
+           
+              console.log("Previous welding start date:", weldingStartDate);
+              console.log("Previous welding end date:", weldingEndDate);
+           
+              // Step 3: Validate the dates
+              if (weldingStartDate && weldingEndDate) {
+                console.log("Welding dates:", weldingStartDate, weldingEndDate);
+           
+                const formattedStart = formatDateTime(weldingStartDate);
+                const formattedEnd = formatDateTime(weldingEndDate);
+           
+                // Check if both dates are properly formatted
+                if (formattedStart && formattedEnd) {
+                  // Step 4: Update the welding_difference in the database
+                  console.log("Updating welding difference...");
+           
+                  await mainPool.request().query(`
+                    UPDATE [replus_treceability].[dbo].[clw_station_status]
+                    SET welding_difference = DATEDIFF(MINUTE, '${formattedStart}', '${formattedEnd}')
+                    WHERE module_barcode = '${barcode.trim()}'
+                  `);
+           
+                  console.log(`welding_difference updated successfully for barcode: ${barcode.trim()}`);
+                } else {
+                  console.log(`Invalid date formatting for welding_start_date or welding_end_date for module_barcode: ${barcode.trim()}`);
+                }
               } else {
-                console.log(`No previous record found for module_barcode: ${barcode.trim()}`);
+                console.log(`No valid previous welding_start_date or welding_end_date for module_barcode: ${barcode.trim()}`);
               }
-
-              /******************** To send NOT OK Status in rework table ****************************/
-              // if (statusToStore === 'NOT OK') {
-              //   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, remark) VALUES ('${barcode.trim()}', 'Welding', '${errorDescription}')`);
-              //   console.log("Data inserted into replus_NOTOK_history_details for Welding");
-              // }
             } else {
-              console.log(`No previous record found for module_barcode: ${barcode.trim()}`);
+              console.log(`No data found for module_barcode: ${barcode.trim()}`);
             }
+           
+            /******************** To send NOT OK Status in rework table ****************************/
+            // if (statusToStore === 'NOT OK') {
+            //   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, remark) VALUES ('${barcode.trim()}', 'Welding', '${errorDescription}')`);
+            //   console.log("Data inserted into replus_NOTOK_history_details for Welding");
+            // }
+            // } else {
+            //   console.log(`No previous record found for module_barcode: ${barcode.trim()}`);
+            // }
             /******************** indrajeet code end **************************/
 
             // Notify frontend with status and error if applicable
@@ -2000,7 +2066,7 @@ async function processFpcb(tags, socket) {
                 await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
                 console.log(`Updated Vision 2 status for RFID: ${RFID}`);
 
-                  
+
                 if (statusToStore === 'NOT OK' && module_barcode2.trim() == barcode.trim()) {
                   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description,today_date) VALUES ('${module_barcode2}', 'FPCB Welding', '${errorDescription || ''}', GETDATE())`);
                   console.log("Data inserted into replus_NOTOK_history_details for FPCB welding");
@@ -2011,8 +2077,6 @@ async function processFpcb(tags, socket) {
 
               }
               else if (ModuleStatus == 41) {
-
-
                 const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
@@ -2022,20 +2086,13 @@ async function processFpcb(tags, socket) {
                 await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
                 console.log(`Updated Vision 2 status for RFID: ${RFID}`);
 
-
-                      
                 if (statusToStore === 'NOT OK' && module_barcode1.trim() == barcode.trim()) {
                   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description,today_date) VALUES ('${module_barcode1}', 'FPCB Welding', '${errorDescription || ''}', GETDATE())`);
                   console.log("Data inserted into replus_NOTOK_history_details for FPCB welding");
                 }
-
-
                 broadcast({ message: `${scannedBarcode1} :Not Ok  ${scannedBarcode2} :Ok  Error : FPCB Welding Is Not Ok` });
-
               }
               else if (ModuleStatus == 43) {
-
-
                 const updateClwStationQuery1 = `UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_status = 'NOT OK', fpcb_error = '${errorDescription}', fpcb_end_date = '${today_date}', FPCB_Welding_Power = '${fpcbPower}', FPCB_Welding_Radius = '${fpcbRadius}', FPCB_Welding_Speed = '${fpcbSpeed}' WHERE module_barcode = '${module_barcode1}'`;
                 await request.query(updateClwStationQuery1);
 
@@ -2044,9 +2101,7 @@ async function processFpcb(tags, socket) {
                 await writeCycleStartConfirmfpcb(tags.fpcb.RFID, socket, false);
                 console.log(`Updated Vision 2 status for RFID: ${RFID}`);
 
-                
-                      
-                if (statusToStore === 'NOT OK'  ) {
+                if (statusToStore === 'NOT OK') {
                   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, error_description,today_date) VALUES ('${barcode}', 'FPCB Welding', '${errorDescription || ''}', GETDATE())`);
                   console.log("Data inserted into replus_NOTOK_history_details for FPCB welding");
                 }
@@ -2063,34 +2118,49 @@ async function processFpcb(tags, socket) {
             await request.query(updateLinkingQuery);
             console.log(`Updated fpcb_live_status for barcode: ${moduleBarcode}`);
 
-            /******************** indrajeet code start **************************/
-            const combinedResult1 = await mainPool.request().query(`
-              WITH LatestRow AS (SELECT TOP 1 sr_no FROM [dbo].[clw_station_status] WHERE module_barcode = '${trimmedBarcode}' ORDER BY sr_no DESC)
-              SELECT TOP 1 fpcb_end_date FROM [dbo].[clw_station_status] WHERE  sr_no < (SELECT sr_no FROM LatestRow) AND CONVERT(date, fpcb_end_date) = CONVERT(date, GETDATE()) ORDER BY sr_no DESC`);
-
-            let previous_fpcb_end_date = null;
-            if (combinedResult1.recordset.length > 0) {
-              previous_fpcb_end_date = combinedResult1.recordset[0].fpcb_end_date;
-            }
-            console.log("fpcb end date ::", previous_fpcb_end_date);
-
-            if (previous_fpcb_end_date != null) {
-              const globalFormattedDateTime1 = formatDateTime(previous_fpcb_end_date);
-
-              if (globalFormattedDateTime1) {
-                await mainPool.request().query(`UPDATE [replus_treceability].[dbo].[clw_station_status] SET fpcb_difference = DATEDIFF(MINUTE, '${globalFormattedDateTime1}', '${globalFormattedDateTime}') WHERE module_barcode = '${trimmedBarcode}'`);
+            /******************** fpcb time difference **************************/
+            // Step 1: Retrieve previous fpcb_start_date and fpcb_end_date for the given barcode
+            const result = await mainPool.request().query(`
+              SELECT TOP 1 fpcb_start_date, fpcb_end_date
+              FROM [dbo].[clw_station_status]
+              WHERE module_barcode = '${barcode.trim()}'
+              ORDER BY sr_no DESC;
+            `);
+         
+            if (result.recordset.length > 0) {
+              const fpcbStartDate = result.recordset[0].fpcb_start_date;
+              const fpcbEndDate = result.recordset[0].fpcb_end_date;
+         
+              if (fpcbStartDate && fpcbEndDate) {
+                const formattedFpcbStart = formatDateTime(fpcbStartDate);
+                const formattedFpcbEnd = formatDateTime(fpcbEndDate);
+         
+                if (formattedFpcbStart && formattedFpcbEnd) {
+                  await mainPool.request().query(`
+                    UPDATE [replus_treceability].[dbo].[clw_station_status]
+                    SET fpcb_difference = DATEDIFF(MINUTE, '${formattedFpcbStart}', '${formattedFpcbEnd}')
+                    WHERE module_barcode = '${barcode.trim()}'
+                  `);
+         
+                  console.log(`fpcb_difference updated successfully for barcode: ${barcode.trim()}`);
+                } else {
+                  console.log(`Invalid date formatting for fpcb_start_date or fpcb_end_date for module_barcode: ${barcode.trim()}`);
+                }
               } else {
-                console.log(`No previous record found for module_barcode: ${trimmedBarcode}`);
+                console.log(`No valid fpcb_start_date or fpcb_end_date for module_barcode: ${barcode.trim()}`);
               }
-
-              /******************** To send NOT OK Status in rework table ****************************/
-              // if (statusToStore === 'NOT OK') {
-              //   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, remark) VALUES ('${trimmedBarcode}', 'FPCB', '${errorDescription}')`);
-              //   console.log("Data inserted into replus_NOTOK_history_details for FPCB");
-              // }
             } else {
-              console.log(`No previous record found for module_barcode: ${trimmedBarcode}`);
+              console.log(`No records found for module_barcode: ${barcode.trim()} and fields fpcb_start_date, fpcb_end_date`);
             }
+         
+            /******************** To send NOT OK Status in rework table ****************************/
+            // if (statusToStore === 'NOT OK') {
+            //   await mainPool.request().query(`INSERT INTO [replus_treceability].[dbo].[replus_NOTOK_history_details] (module_barcode, station, remark) VALUES ('${trimmedBarcode}', 'FPCB', '${errorDescription}')`);
+            //   console.log("Data inserted into replus_NOTOK_history_details for FPCB");
+            // }
+            // } else {
+            //   console.log(`No previous record found for module_barcode: ${trimmedBarcode}`);
+            // }
             /******************** indrajeet code end **************************/
 
             // Notify frontend with status and error if applicable
@@ -2120,3 +2190,4 @@ async function processFpcb(tags, socket) {
 server.listen(7080, () => {
   console.log('Server listening on port 7080');
 });
+ 
