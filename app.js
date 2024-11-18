@@ -15,10 +15,10 @@ function broadcast(message) {
 
 // Database connection config
 const dbConfig = {
-  user: "admin1",
-  password: "admin1",
-  server: "DESKTOP-RREMJUE",
-  database: "replus_treceability",
+  user: "admin2",
+   password: "reset@123",
+   server: "REP-TRACE",
+   database: "replus_treceability",
   options: {
     encrypt: false,
     trustServerCertificate: true,
