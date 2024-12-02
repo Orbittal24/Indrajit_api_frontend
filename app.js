@@ -194,6 +194,8 @@ const server = net.createServer(async (socket) => {
   //    }
   // });
   socket.on('data', async (data) => {
+
+    console.log("data", data);
     try {
       const receivedData = data.toString().trim();  // Convert buffer to string and trim whitespace
       const jsonStrings = receivedData.split(/(?<=\})\s*(?=\{)/);  // Split concatenated JSON strings
