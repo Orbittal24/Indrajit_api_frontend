@@ -34,20 +34,42 @@ const cellSortingPool = new sql.ConnectionPool(CellSortingConfig);
 const mainPoolConnect = mainPool.connect();
 const cellSortingPoolConnect = cellSortingPool.connect();
 
-// Helper function to query main database
+// // Helper function to query main database
+// async function queryMainDatabase(query) {
+//   await mainPoolConnect;
+//   const request = new sql.Request(mainPool);
+//   return request.query(query);
+// }
+
+// // Helper function to query CellSorting database
+// async function queryCellSortingDatabase(query) {
+//   await cellSortingPoolConnect;
+//   const request = new sql.Request(cellSortingPool);
+//   return request.query(query);
+// }
+
+
 async function queryMainDatabase(query) {
-  await mainPoolConnect;
-  const request = new sql.Request(mainPool);
-  return request.query(query);
+  try {
+    await mainPoolConnect;
+    const request = new sql.Request(mainPool);
+    return await request.query(query);
+  } catch (err) {
+    console.error("Error querying main database:", err.message);
+    throw new Error("Main database query failed.");
+  }
 }
 
-// Helper function to query CellSorting database
 async function queryCellSortingDatabase(query) {
-  await cellSortingPoolConnect;
-  const request = new sql.Request(cellSortingPool);
-  return request.query(query);
+  try {
+    await cellSortingPoolConnect;
+    const request = new sql.Request(cellSortingPool);
+    return await request.query(query);
+  } catch (err) {
+    console.error("Error querying CellSorting database:", err.message);
+    throw new Error("CellSorting database query failed.");
+  }
 }
-
 // API to check barcode and count entries
 app.post("/checkBarcode", async (req, res) => {
   const { scannedBarcode } = req.body;
