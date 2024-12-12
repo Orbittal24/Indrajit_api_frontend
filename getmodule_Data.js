@@ -153,7 +153,7 @@ if (records.length > 0) {
     if (moduleCount > 0) {
       const cellSortingCountQuery = `
         SELECT COUNT(*) AS count FROM cell_sorting_backup
-        WHERE ModuleCode = '${ScannedBarcode}'`;
+        WHERE ModuleCode = '${scannedBarcode}'`;
       const cellSortingCountResult = await queryMainDatabase(cellSortingCountQuery);
       const cellSortingCount = cellSortingCountResult.recordset[0].count;
 
