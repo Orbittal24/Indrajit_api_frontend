@@ -150,9 +150,9 @@ if (records.length > 0) {
    
     if (moduleCount > 0) {
       const cellSortingCountQuery = `
-        SELECT COUNT(*) AS count FROM TblBatteryReports 
+        SELECT COUNT(*) AS count FROM cell_sorting_backup
         WHERE ModuleCode = ${ScannedBarcode}`;
-      const cellSortingCountResult = await queryCellSortingDatabase(cellSortingCountQuery);
+      const cellSortingCountResult = await queryMainDatabase(cellSortingCountQuery);
       const cellSortingCount = cellSortingCountResult.recordset[0].count;
 
       if (cellSortingCount === moduleCount) {
