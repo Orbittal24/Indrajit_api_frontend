@@ -143,7 +143,7 @@ if (records.length > 0) {
     const moduleCode = scannedBarcode.substring(0, 6);
     console.log("Extracted ModuleCode:", moduleCode);
 
-    const moduleCountQuery = `SELECT COUNT(*) AS count FROM voltage_ir_admin WHERE ModuleCode = @ModuleCode`;
+    const moduleCountQuery = `SELECT COUNT(*) AS count FROM voltage_ir_admin WHERE ModuleCode = ${ModuleCode}`;
     const moduleCountResult = await queryMainDatabase(moduleCountQuery);
     const moduleCount = moduleCountResult.recordset[0].count;
 
@@ -151,7 +151,7 @@ if (records.length > 0) {
     if (moduleCount > 0) {
       const cellSortingCountQuery = `
         SELECT COUNT(*) AS count FROM TblBatteryReports 
-        WHERE ModuleCode = @ScannedBarcode`;
+        WHERE ModuleCode = ${ScannedBarcode}`;
       const cellSortingCountResult = await queryCellSortingDatabase(cellSortingCountQuery);
       const cellSortingCount = cellSortingCountResult.recordset[0].count;
 
