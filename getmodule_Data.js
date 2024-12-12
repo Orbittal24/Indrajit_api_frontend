@@ -142,11 +142,11 @@ if (records.length > 0) {
     // Process for checking module code completeness
     const moduleCode = scannedBarcode.substring(0, 6);
     console.log("Extracted ModuleCode:", moduleCode);
-
-    const moduleCountQuery = `SELECT COUNT(*) AS count FROM voltage_ir_admin WHERE ModuleCode = ${moduleCode}`;
+    const moduleCountQuery = `SELECT COUNT(*) AS count FROM voltage_ir_admin WHERE ModuleCode = '${moduleCode}'`;
     const moduleCountResult = await queryMainDatabase(moduleCountQuery);
     const moduleCount = moduleCountResult.recordset[0].count;
-
+    
+    console.log("moduleCountQuery",moduleCountQuery);
    
     if (moduleCount > 0) {
       const cellSortingCountQuery = `
