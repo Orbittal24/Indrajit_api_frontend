@@ -147,14 +147,20 @@ if (records.length > 0) {
     const moduleCount = moduleCountResult.recordset[0].count;
     
     console.log("moduleCountQuery",moduleCountQuery);
+    console.log("moduleCountResult",moduleCountResult);
+    console.log("moduleCount",moduleCount);
    
     if (moduleCount > 0) {
       const cellSortingCountQuery = `
         SELECT COUNT(*) AS count FROM cell_sorting_backup
-        WHERE ModuleCode = ${ScannedBarcode}`;
+        WHERE ModuleCode = '${ScannedBarcode}'`;
       const cellSortingCountResult = await queryMainDatabase(cellSortingCountQuery);
       const cellSortingCount = cellSortingCountResult.recordset[0].count;
 
+      console.log("cellSortingCountQuery",cellSortingCountQuery);
+      console.log("cellSortingCountResult",cellSortingCountResult);
+      console.log("cellSortingCount",cellSortingCount);
+      
       if (cellSortingCount === moduleCount) {
         res.status(200).json({
           message: "Module complete in cell sorting.",
