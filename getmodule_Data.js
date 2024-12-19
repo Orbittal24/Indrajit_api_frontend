@@ -83,61 +83,70 @@ app.post("/checkBarcode", async (req, res) => {
   }
 
   try {
-// Delete existing entries from backup
-const DELETEcellSortingQuery = `DELETE FROM cell_sorting_backup WHERE ModuleCode = @ScannedBarcode`;
-const deleteRequest = new sql.Request(mainPool);
-await deleteRequest.input("ScannedBarcode", sql.VarChar(50), scannedBarcode).query(DELETEcellSortingQuery);
-console.log(`Deleted records from cell_sorting_backup for ModuleCode: ${scannedBarcode}`);
+    const selectCellSortingCountQuery = `
+        SELECT COUNT(*) AS count FROM cell_sorting_backup
+        WHERE ModuleCode = '${scannedBarcode}'`;
+      const selectCellSortingCountResult = await queryMainDatabase(selectCellSortingCountQuery);
+      const selectCellSortingCount = selectCellSortingCountResult.recordset[0]?.count || 0;
 
-// Fetch records from CellSorting database
-const cellSortingQuery = `SELECT * FROM TblBatteryReports WHERE ModuleCode = @ScannedBarcode`;
-const cellSortingRequest = new sql.Request(cellSortingPool);
-const cellSortingResult = await cellSortingRequest.input("ScannedBarcode", sql.VarChar(50), scannedBarcode).query(cellSortingQuery);
+      if(selectCellSortingCount == 0){
 
-const records = cellSortingResult.recordset;
-console.log(`Fetched ${records.length} records from TblBatteryReports for ModuleCode: ${scannedBarcode}`);
+          // // Delete existing entries from backup
+          // const DELETEcellSortingQuery = `DELETE FROM cell_sorting_backup WHERE ModuleCode = @ScannedBarcode`;
+          // const deleteRequest = new sql.Request(mainPool);
+          // await deleteRequest.input("ScannedBarcode", sql.VarChar(50), scannedBarcode).query(DELETEcellSortingQuery);
+          // console.log(`Deleted records from cell_sorting_backup for ModuleCode: ${scannedBarcode}`);
 
-// Insert records into backup
-if (records.length > 0) {
-  const insertQuery = `
-    INSERT INTO [dbo].[cell_sorting_backup]
-    ([ModelName], [TraceabilityCode], [InwardScanTime], [MeasuredHeight], [MeasuredWidth], 
-     [MeasuredLength], [MeasuredVoltage], [MeasuredResistance], [Grade], [Conveyor], 
-     [PackingTime], [ModuleCode], [ResultCode], [Remark])
-    VALUES 
-    (@ModelName, @TraceabilityCode, @InwardScanTime, @MeasuredHeight, @MeasuredWidth, 
-     @MeasuredLength, @MeasuredVoltage, @MeasuredResistance, @Grade, @Conveyor, 
-     @PackingTime, @ModuleCode, @ResultCode, @Remark)`;
+          // Fetch records from CellSorting database
+          const cellSortingQuery = `SELECT * FROM TblBatteryReports WHERE ModuleCode = @ScannedBarcode`;
+          const cellSortingRequest = new sql.Request(cellSortingPool);
+          const cellSortingResult = await cellSortingRequest.input("ScannedBarcode", sql.VarChar(50), scannedBarcode).query(cellSortingQuery);
 
-  let insertedCount = 0; // Counter for inserted records
-  for (const record of records) {
-    const insertRequest = new sql.Request(mainPool);
-    await insertRequest
-      .input("ModelName", sql.VarChar(25), record.ModelName)
-      .input("TraceabilityCode", sql.VarChar(50), record.TraceabilityCode)
-      .input("InwardScanTime", sql.DateTime, record.InwardScanTime)
-      .input("MeasuredHeight", sql.Float, record.MeasuredHeight)
-      .input("MeasuredWidth", sql.Float, record.MeasuredWidth)
-      .input("MeasuredLength", sql.Float, record.MeasuredLength)
-      .input("MeasuredVoltage", sql.Float, record.MeasuredVoltage)
-      .input("MeasuredResistance", sql.Float, record.MeasuredResistance)
-      .input("Grade", sql.VarChar(10), record.Grade)
-      .input("Conveyor", sql.VarChar(10), record.Conveyor)
-      .input("PackingTime", sql.DateTime, record.PackingTime)
-      .input("ModuleCode", sql.VarChar(50), record.ModuleCode)
-      .input("ResultCode", sql.TinyInt, record.ResultCode)
-      .input("Remark", sql.VarChar(250), record.Remark)
-      .query(insertQuery);
+          const records = cellSortingResult.recordset;
+          console.log(`Fetched ${records.length} records from TblBatteryReports for ModuleCode: ${scannedBarcode}`);
 
-    insertedCount++;
-    console.log(`Inserted record ${insertedCount}/${records.length} into cell_sorting_backup.`);
-  }
+          // Insert records into backup
+          if (records.length > 0) {
+            const insertQuery = `
+              INSERT INTO [dbo].[cell_sorting_backup]
+              ([ModelName], [TraceabilityCode], [InwardScanTime], [MeasuredHeight], [MeasuredWidth], 
+              [MeasuredLength], [MeasuredVoltage], [MeasuredResistance], [Grade], [Conveyor], 
+              [PackingTime], [ModuleCode], [ResultCode], [Remark])
+              VALUES 
+              (@ModelName, @TraceabilityCode, @InwardScanTime, @MeasuredHeight, @MeasuredWidth, 
+              @MeasuredLength, @MeasuredVoltage, @MeasuredResistance, @Grade, @Conveyor, 
+              @PackingTime, @ModuleCode, @ResultCode, @Remark)`;
 
-  console.log(`Successfully inserted ${insertedCount} records into cell_sorting_backup.`);
-} else {
-  console.log(`No records found to insert for ModuleCode: ${scannedBarcode}.`);
-}
+            let insertedCount = 0; // Counter for inserted records
+            for (const record of records) {
+              const insertRequest = new sql.Request(mainPool);
+              await insertRequest
+                .input("ModelName", sql.VarChar(25), record.ModelName)
+                .input("TraceabilityCode", sql.VarChar(50), record.TraceabilityCode)
+                .input("InwardScanTime", sql.DateTime, record.InwardScanTime)
+                .input("MeasuredHeight", sql.Float, record.MeasuredHeight)
+                .input("MeasuredWidth", sql.Float, record.MeasuredWidth)
+                .input("MeasuredLength", sql.Float, record.MeasuredLength)
+                .input("MeasuredVoltage", sql.Float, record.MeasuredVoltage)
+                .input("MeasuredResistance", sql.Float, record.MeasuredResistance)
+                .input("Grade", sql.VarChar(10), record.Grade)
+                .input("Conveyor", sql.VarChar(10), record.Conveyor)
+                .input("PackingTime", sql.DateTime, record.PackingTime)
+                .input("ModuleCode", sql.VarChar(50), record.ModuleCode)
+                .input("ResultCode", sql.TinyInt, record.ResultCode)
+                .input("Remark", sql.VarChar(250), record.Remark)
+                .query(insertQuery);
 
+              insertedCount++;
+              console.log(`Inserted record ${insertedCount}/${records.length} into cell_sorting_backup.`);
+            }
+
+            console.log(`Successfully inserted ${insertedCount} records into cell_sorting_backup.`);
+          } else {
+            console.log(`No records found to insert for ModuleCode: ${scannedBarcode}.`);
+          }
+
+      }
 
     // Process for checking module code completeness
     const moduleCode = scannedBarcode.substring(0, 6);
@@ -284,4 +293,3 @@ app.listen(PORT, () => {
 // app.listen(PORT, () => {
 //   console.log(`Server running on port ${PORT}`);
 // });
-
