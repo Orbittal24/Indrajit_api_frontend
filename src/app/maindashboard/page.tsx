@@ -118,53 +118,49 @@ const ECommerce: React.FC = () => {
 
    
 
-    const fetchData = async () => { 
+    const fetchData = async () => {
       try {
         const response = await fetch("http://10.5.0.20:5501/api/CountAll");
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const result = await response.json();
-        const data = result.data; // Direct access to the data object
-        console.log(data)
+        const data = result.data[0];
+        const liveStatuses = result.liveStatuses;
+    
         const shift = determineShift();
         setCurrentShift(shift); // Set the current shift here
     
         let vision1, vision2, welding, fpcb, moduleBarcode1, moduleBarcode2, moduleBarcode3, moduleBarcode4;
-    
         if (shift === "A") {
-          vision1 = [data.v1_ok_count, data.v1_notok_count];
-          vision2 = [data.v2_ok_count, data.v2_notok_count];
-          welding = [data.welding_ok_count, data.welding_notok_count];
-          fpcb = [data.fpcb_ok_count, data.fpcb_notok_count];
-          // Assuming moduleBarcode info is no longer relevant
-          moduleBarcode1 = '';  // You can adjust this as needed
-          moduleBarcode2 = '';
-          moduleBarcode3 = '';
-          moduleBarcode4 = '';
+          vision1 = [data.v1_first_shift_ok, data.v1_first_shift_notok];
+          vision2 = [data.v2_first_shift_ok, data.v2_first_shift_notok];
+          welding = [data.welding_first_shift_ok, data.welding_first_shift_notok];
+          fpcb = [data.fpcb_first_shift_ok, data.fpcb_first_shift_notok];
+          moduleBarcode1 = liveStatuses.v1.join('\n');
+          moduleBarcode2 = liveStatuses.v2.join('\n');
+          moduleBarcode3 = liveStatuses.welding.join('\n');
+          moduleBarcode4 = liveStatuses.fpcb.join('\n');
         } else if (shift === "B") {
-          vision1 = [data.v1_ok_count, data.v1_notok_count];
-          vision2 = [data.v2_ok_count, data.v2_notok_count];
-          welding = [data.welding_ok_count, data.welding_notok_count];
-          fpcb = [data.fpcb_ok_count, data.fpcb_notok_count];
-          // Adjust moduleBarcode as needed
-          moduleBarcode1 = '';
-          moduleBarcode2 = '';
-          moduleBarcode3 = '';
-          moduleBarcode4 = '';
+          vision1 = [data.v1_second_shift_ok, data.v1_second_shift_notok];
+          vision2 = [data.v2_second_shift_ok, data.v2_second_shift_notok];
+          welding = [data.welding_second_shift_ok, data.welding_second_shift_notok];
+          fpcb = [data.fpcb_second_shift_ok, data.fpcb_second_shift_notok];
+          moduleBarcode1 = liveStatuses.v1.join('\n');
+          moduleBarcode2 = liveStatuses.v2.join('\n');
+          moduleBarcode3 = liveStatuses.welding.join('\n');
+          moduleBarcode4 = liveStatuses.fpcb.join('\n');
         } else {
-          vision1 = [data.v1_ok_count, data.v1_notok_count];
-          vision2 = [data.v2_ok_count, data.v2_notok_count];
-          welding = [data.welding_ok_count, data.welding_notok_count];
-          fpcb = [data.fpcb_ok_count, data.fpcb_notok_count];
-          // Adjust moduleBarcode as needed
-          moduleBarcode1 = '';
-          moduleBarcode2 = '';
-          moduleBarcode3 = '';
-          moduleBarcode4 = '';
+          vision1 = [data.v1_third_shift_ok, data.v1_third_shift_notok];
+          vision2 = [data.v2_third_shift_ok, data.v2_third_shift_notok];
+          welding = [data.welding_third_shift_ok, data.welding_third_shift_notok];
+          fpcb = [data.fpcb_third_shift_ok, data.fpcb_third_shift_notok];
+          moduleBarcode1 = liveStatuses.v1.join('\n');
+          moduleBarcode2 = liveStatuses.v2.join('\n');
+          moduleBarcode3 = liveStatuses.welding.join('\n');
+          moduleBarcode4 = liveStatuses.fpcb.join('\n');
         }
     
-        // Update the state with the fetched data
         setVision1Series(vision1);
         setVision2Series(vision2);
         setWeldingSeries(welding);
@@ -173,12 +169,10 @@ const ECommerce: React.FC = () => {
         setModuleBarcode2(moduleBarcode2);
         setModuleBarcode3(moduleBarcode3);
         setModuleBarcode4(moduleBarcode4);
-        
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-    
     
     fetchData();
     const interval = setInterval(() => {
@@ -225,43 +219,43 @@ const ECommerce: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-0 xl:grid-cols-4 2xl:gap-7.5">
         <Card className="m-4">
-        {vision1Series.length > 0 && <ChartThree title="Vision 1" series1={vision1Series} />}
-          {/* <div className="barcode-inputs">
+          {vision1Series.length > 0 && <ChartThree title="Vision 1" series1={vision1Series} />}
+          <div className="barcode-inputs">
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 1</label>
             <input type="text" value={moduleBarcode1.split(',')[0] || ''} className="module-input" readOnly />
            <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 2</label>
             <input type="text" value={moduleBarcode1.split(',')[1] || ''} className="module-input" readOnly />
-          </div> */}
+          </div>
         </Card>
         
         <Card className="m-4">
           {vision2Series.length > 0 && <ChartThree title="Vision 2" series1={vision2Series} />}
-          {/* <div className="barcode-inputs">
+          <div className="barcode-inputs">
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 1</label>
             <input type="text" value={moduleBarcode2.split(',')[0] || ''} className="module-input" readOnly />
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 2</label>
             <input type="text" value={moduleBarcode2.split(',')[1] || ''} className="module-input" readOnly />
-          </div> */}
+          </div>
         </Card>
         
         <Card className="m-4">
           {weldingSeries.length > 0 && <ChartThree title="Welding" series1={weldingSeries} />}
-          {/* <div className="barcode-inputs">
+          <div className="barcode-inputs">
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 1</label>
             <input type="text" value={moduleBarcode3.split(',')[0] || ''} className="module-input" readOnly />
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 2</label>
             <input type="text" value={moduleBarcode3.split(',')[1] || ''} className="module-input" readOnly />
-          </div> */}
+          </div>
         </Card>
         
         <Card className="m-4">
           {fpcbSeries.length > 0 && <ChartThree title="FPCB Welding" series1={fpcbSeries} />}
-          {/* <div className="barcode-inputs">
+          <div className="barcode-inputs">
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 1</label>
             <input type="text" value={moduleBarcode4.split(',')[0] || ''} className="module-input" readOnly />
           <label htmlFor="moduleBarcode1Field1" style={{ fontWeight: 'bold' }}>Live Module 2</label>
             <input type="text" value={moduleBarcode4.split(',')[1] || ''} className="module-input" readOnly />
-          </div> */}
+          </div>
         </Card>
       </div>
 
@@ -287,4 +281,3 @@ const ECommerce: React.FC = () => {
 };
 
 export default ECommerce;
-
